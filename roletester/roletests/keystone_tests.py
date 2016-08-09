@@ -91,36 +91,20 @@ class TestSample(BaseTestCase):
 
     name = 'scratch'
     flavor = '1'
-    image_file = '/Users/chalupaul/cirros-0.3.4-x86_64-disk.img'
+    image_file = '/home/chalupaul/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
 
     def test_cloud_admin_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         SampleFactory(cloud_admin) \
-            .produce() \
-            .run(context=self.context)
-
-    def test_cloud_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-        # TODO: Should pass with with Domain2
-        cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.PROJECT_CREATE,
-                 clients=creator) \
-            .set(SampleFactory.USER_CREATE,
-                 clients=creator) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_all(self):
         bu_admin = self.km.find_user_credentials(
-            'Default', 'torst', 'admin'
+            'Default', 'torst', 'bu-admin'
         )
         SampleFactory(bu_admin) \
             .produce() \
@@ -128,10 +112,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_grant_roles(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
         GrantRoleFactory(bu_admin) \
             .set(GrantRoleFactory.PROJECT_CREATE,
@@ -145,10 +129,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_revoke_roles(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
         RevokeRoleFactory(bu_admin) \
             .set(RevokeRoleFactory.PROJECT_CREATE,
@@ -164,10 +148,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_delete(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
         UserDeleteFactory(bu_admin) \
             .set(UserDeleteFactory.PROJECT_CREATE,
@@ -181,10 +165,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_project_delete(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
         ProjectDeleteFactory(bu_admin) \
             .set(ProjectDeleteFactory.PROJECT_CREATE,

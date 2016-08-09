@@ -228,7 +228,7 @@ class TestSample(BaseTestCase):
 
     name = 'scratch'
     flavor = '1'
-    image_file = '/Users/chalupaul/cirros-0.3.4-x86_64-disk.img'
+    image_file = '/home/chalupaul/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
 
     def setUp(self):
@@ -246,7 +246,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_admin_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
 
         SampleFactory(cloud_admin) \
@@ -257,7 +257,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_admin_floatingip(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         FloatingIPFactory(cloud_admin) \
             .produce() \
@@ -271,7 +271,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
 
         SampleFactory(cloud_admin) \
@@ -306,71 +306,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-
-        FloatingIPFactory(cloud_admin) \
-            .set(FloatingIPFactory.NETWORK_CREATE,
-                 clients=user1) \
-            .set(FloatingIPFactory.SUBNET_CREATE,
-                 clients=user1) \
-            .set(FloatingIPFactory.PORT_CREATE,
-                 clients=user1) \
-            .set(FloatingIPFactory.ROUTER_CREATE,
-                 clients=user1) \
-            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
-                 clients=user1) \
-            .set(FloatingIPFactory.FLOATINGIP_CREATE,
-                 clients=user1) \
-            .produce() \
-            .run(context=self.context)
-
-    def test_cloud_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-        user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
-        )
-        # TODO: Should pass with with Domain2
-        cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,)) \
-            .set(SampleFactory.IMAGE_WAIT,
-                 clients=creator) \
-            .set(SampleFactory.NETWORK_CREATE,
-                 clients=user1) \
-            .set(SampleFactory.SUBNET_CREATE,
-                 clients=user1) \
-            .set(SampleFactory.SERVER_CREATE,
-                 clients=user1) \
-            .set(SampleFactory.SERVER_WAIT,
-                 clients=user1) \
-            .set(SampleFactory.SECURITY_GROUP_CREATE,
-                 clients=user1) \
-            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE,
-                 clients=user1) \
-            .set(SampleFactory.SERVER_DELETE,
-                 clients=user1) \
-            .set(SampleFactory.ROUTER_CREATE,
-                 clients=user1) \
-            .set(SampleFactory.ROUTER_ADD_INTERFACE,
-                 clients=user1) \
-            .produce() \
-            .run(context=self.context)
-
-    def test_cloud_admin_different_domain_different_user_floatingip(self):
-        user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
-        )
-        # TODO: Should pass with with Domain2
-        cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
 
         FloatingIPFactory(cloud_admin) \
@@ -391,7 +327,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_all(self):
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
 
         SampleFactory(bu_admin) \
@@ -402,7 +338,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_floatingip(self):
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
         FloatingIPFactory(bu_admin) \
             .produce() \
@@ -416,7 +352,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
 
         SampleFactory(bu_admin) \
@@ -450,9 +386,8 @@ class TestSample(BaseTestCase):
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
         )
-        # TODO: Should pass with with Domain2
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
 
         FloatingIPFactory(bu_admin) \
@@ -475,9 +410,8 @@ class TestSample(BaseTestCase):
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
         )
-        # TODO: Should pass with with Domain2
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
 
         FloatingIPFactory(bu_admin) \
@@ -512,7 +446,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
 
         SecgroupAddFactory(bu_admin) \
@@ -552,7 +486,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
 
         AddInterfaceFactory(bu_admin) \
@@ -597,7 +531,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
 
         RouterDeleteFactory(bu_admin) \
@@ -613,7 +547,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
 
         SubnetDeleteFactory(bu_admin) \
@@ -631,7 +565,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
 
         NetworkDeleteFactory(bu_admin) \

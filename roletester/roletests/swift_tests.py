@@ -40,29 +40,15 @@ class TestSample(BaseTestCase):
 
     def test_cloud_admin_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         SampleFactory(cloud_admin) \
-            .produce() \
-            .run(context=self.context)
-
-    def test_cloud_admin_different_domain(self):
-        creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-        # TODO: Should pass with with Domain2
-        cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.SWIFT_CONTAINER_CREATE,
-                 clients=creator) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_all(self):
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
         SampleFactory(bu_admin) \
             .produce() \
@@ -70,10 +56,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
         SampleFactory(bu_admin) \
             .set(SampleFactory.SWIFT_CONTAINER_CREATE,

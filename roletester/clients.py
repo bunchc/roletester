@@ -8,8 +8,6 @@ from keystoneclient import client as keystoneclient
 from neutronclient.v2_0 import client as neutronclient
 from swiftclient import client as swiftclient
 
-from log import logging
-logger = logging.getLogger("roletester.clients.ClientManager")
 class ClientManager(object):
     """Object that manages multiple openstack clients.
 
@@ -41,25 +39,19 @@ class ClientManager(object):
         :param scope: Sets the scope you get back from Session.
         :returns: keystoneauth1.session.Session
         """
-        logger.debug('scope: {}'.format(scope))
         revoke_keys = {'project': 'domain_id', 'domain': 'project_name'}
         if scope not in revoke_keys:
             raise ValueError("scope must be either `domain` or `project`.")
         else:
             revoke_key = revoke_keys[scope]
-        logger.debug('Revoke key: {}'.format(revoke_key))
 
-        import pprint
-        logger.debug("Before scoping")
-        logger.debug(pprint.pformat(self.auth_kwargs))
         if self._scope[scope]['session'] is None:
             scoped_kwargs = { x: self.auth_kwargs[x]
                               for x in self.auth_kwargs
                               if x != revoke_key }
             self._scope[scope]['kwargs'] = scoped_kwargs
-        logger.debug(pprint.pformat(scoped_kwargs))
-        auth = v3.Password(**self._scope[scope]['kwargs'])
-        self._scope[scope]['session'] = session.Session(auth=auth)
+            auth = v3.Password(**self._scope[scope]['kwargs'])
+            self._scope[scope]['session'] = session.Session(auth=auth)
         return self._scope[scope]['session']
 
     def get_nova(self, version='2.1', scope='project'):

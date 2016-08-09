@@ -35,12 +35,12 @@ class TestSample(BaseTestCase):
 
     name = 'scratch'
     flavor = '1'
-    image_file = '/Users/chalupaul/cirros-0.3.4-x86_64-disk.img'
+    image_file = '/home/chalupaul/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
 
     def test_cloud_admin_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
 
         SampleFactory(cloud_admin) \
@@ -65,26 +65,9 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
-    def test_cloud_admin_different_domain_different_user(self):
-        creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
-        )
-        # TODO: Should pass with with Domain2
-        cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
-        )
-
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,)) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
-            .produce() \
-            .run(context=self.context)
-
     def test_bu_admin_all(self):
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'bu-admin'
         )
 
         SampleFactory(bu_admin) \
@@ -98,7 +81,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'bu_admin'
+            'Default', self.project, 'bu-admin'
         )
 
         SampleFactory(bu_admin) \
@@ -114,7 +97,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, '_member_'
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'admin'
+            'Domain2', self.project, 'bu-admin'
         )
 
         SampleFactory(bu_admin) \
