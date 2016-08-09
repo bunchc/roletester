@@ -156,7 +156,8 @@ class KeystoneManager(object):
                 'project_name': project_resource.name,
                 'auth_url': self.env_vars['auth_url'],
                 'user_domain_name': domain_resource.name,
-                'project_domain_name': domain_resource.name
+                'project_domain_name': domain_resource.name,
+		'domain_id': domain_resource.id
             }
             self.__users[hash] = ClientManager(**user_kwargs)
             return self.__users[hash]
