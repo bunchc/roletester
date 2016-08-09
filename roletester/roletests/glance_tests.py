@@ -45,7 +45,8 @@ class TestSample(BaseTestCase):
 
         SampleFactory(cloud_admin) \
             .set(SampleFactory.IMAGE_CREATE,
-                 args=(self.image_file,)) \
+                 args=(self.image_file,),
+		 kwargs={'visibility': 'public'}) \
             .produce() \
             .run(context=self.context)
 
