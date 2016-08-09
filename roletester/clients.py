@@ -57,9 +57,9 @@ class ClientManager(object):
                               for x in self.auth_kwargs
                               if x != revoke_key }
             self._scope[scope]['kwargs'] = scoped_kwargs
-        logger.debug(pprint.pformat(scoped_kwargs))
-        auth = v3.Password(**self._scope[scope]['kwargs'])
-        self._scope[scope]['session'] = session.Session(auth=auth)
+            logger.debug(pprint.pformat(scoped_kwargs))
+            auth = v3.Password(**self._scope[scope]['kwargs'])
+            self._scope[scope]['session'] = session.Session(auth=auth)
         return self._scope[scope]['session']
 
     def get_nova(self, version='2.1', scope='project'):
