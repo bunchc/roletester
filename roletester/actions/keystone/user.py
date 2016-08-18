@@ -5,7 +5,7 @@ from roletester.exc import KeystoneNotFound
 logger = logging.getLogger('roletester.actions.keystone.user')
 
 
-def create(clients, context, name="test_user", password="test_pass"):
+def create(clients, context, name="test_user", password="test_pass", domain="Default"):
     """Create a new keystone user
 
     Sets context['user_obj']
@@ -16,13 +16,15 @@ def create(clients, context, name="test_user", password="test_pass"):
     :type context: Dict
     :param name: Name for the new user.
     :type name: String
+    :param domain: Domain id for the new user
+    :type domain: String
     :param password: Password for the new user
     :type password: String
     """
 
     logger.debug("Taking action user.create {}.".format(name))
     keystone = clients.get_keystone()
-    user = keystone.users.create(name, domain="Default", password="test")
+    user = keystone.users.create(name, domain=domain, password=password)
     context.update({'user_obj': user})
     context.setdefault('stack', []).append({'user_obj': user})
 
