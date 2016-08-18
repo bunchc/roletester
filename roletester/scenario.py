@@ -52,6 +52,7 @@ class Scenario(list):
                 matches = [isinstance(e, t) for t in expected_exceptions or []]
                 if not any(matches):
                     logger.exception('Unexpected Exception!')
+                    logger.debug("Type: {}".format(type(e)))
                     raise e
                 logger.debug("Found expected exception {}".format(type(e)))
             logger.debug('Context: {}'.format(pprint.pprint(context)))

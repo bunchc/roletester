@@ -27,6 +27,8 @@ class SampleFactory(Factory):
     _ACTIONS = [
         image_create,
         image_wait_for_status,
+        network_create,
+        subnet_create,
         server_create,
         server_wait_for_status,
         server_show,
@@ -34,8 +36,6 @@ class SampleFactory(Factory):
         server_create_image,
         image_wait_for_status,
         image_delete,
-        network_create,
-        subnet_create,
         port_create,
         interface_attach,
         interface_detach,
@@ -44,15 +44,15 @@ class SampleFactory(Factory):
 
     IMAGE_CREATE = 0
     IMAGE_WAIT = 1
-    SERVER_CREATE = 2
-    SERVER_WAIT = 3
-    SERVER_SHOW = 4
-    SERVER_UPDATE = 5
-    SERVER_CREATE_IMAGE = 6
-    SERVER_IMAGE_WAIT = 7
-    SERVER_IMAGE_DELETE = 8
-    NETWORK_CREATE = 9
-    SUBNET_CREATE = 10
+    NETWORK_CREATE = 2
+    SUBNET_CREATE = 3
+    SERVER_CREATE = 4
+    SERVER_WAIT = 5
+    SERVER_SHOW = 6
+    SERVER_UPDATE = 7
+    SERVER_CREATE_IMAGE = 8
+    SERVER_IMAGE_WAIT = 9
+    SERVER_IMAGE_DELETE = 10
     PORT_CREATE = 11
     INTERFACE_ATTACH = 12
     INTERFACE_DETACH = 13
@@ -64,6 +64,8 @@ class SnapFactory(Factory):
     _ACTIONS = [
         image_create,
         image_wait_for_status,
+        network_create,
+        subnet_create,
         server_create,
         server_wait_for_status,
         server_show,
@@ -73,11 +75,13 @@ class SnapFactory(Factory):
 
     IMAGE_CREATE = 0
     IMAGE_WAIT = 1
-    SERVER_CREATE = 2
-    SERVER_WAIT = 3
-    SERVER_SHOW = 4
-    SERVER_UPDATE = 5
-    SERVER_CREATE_IMAGE = 6
+    NETWORK_CREATE = 2
+    SUBNET_CREATE = 3
+    SERVER_CREATE = 4
+    SERVER_WAIT = 5
+    SERVER_SHOW = 6
+    SERVER_UPDATE = 7
+    SERVER_CREATE_IMAGE = 8
 
 
 class NetworkPortFactory(Factory):
@@ -85,19 +89,19 @@ class NetworkPortFactory(Factory):
     _ACTIONS = [
         image_create,
         image_wait_for_status,
-        server_create,
-        server_wait_for_status,
         network_create,
         subnet_create,
+        server_create,
+        server_wait_for_status,
         port_create,
     ]
 
     IMAGE_CREATE = 0
     IMAGE_WAIT = 1
-    SERVER_CREATE = 2
-    SERVER_WAIT = 3
-    NETWORK_CREATE = 4
-    SUBNET_CREATE = 5
+    NETWORK_CREATE = 2
+    SUBNET_CREATE = 3
+    SERVER_CREATE = 4
+    SERVER_WAIT = 5
     PORT_CREATE = 6
     INTERFACE_ATTACH = 7
     INTERFACE_DETACH = 8
@@ -109,20 +113,20 @@ class NetworkAttachInterfaceFactory(Factory):
     _ACTIONS = [
         image_create,
         image_wait_for_status,
-        server_create,
-        server_wait_for_status,
         network_create,
         subnet_create,
+        server_create,
+        server_wait_for_status,
         port_create,
         interface_attach,
     ]
 
     IMAGE_CREATE = 0
     IMAGE_WAIT = 1
-    SERVER_CREATE = 2
-    SERVER_WAIT = 3
-    NETWORK_CREATE = 4
-    SUBNET_CREATE = 5
+    NETWORK_CREATE = 2
+    SUBNET_CREATE = 3
+    SERVER_CREATE = 4
+    SERVER_WAIT = 5
     PORT_CREATE = 6
     INTERFACE_ATTACH = 7
 
@@ -132,10 +136,10 @@ class NetworkDetachInterfaceFactory(Factory):
     _ACTIONS = [
         image_create,
         image_wait_for_status,
-        server_create,
-        server_wait_for_status,
         network_create,
         subnet_create,
+        server_create,
+        server_wait_for_status,
         port_create,
         interface_attach,
         interface_detach,
@@ -144,10 +148,10 @@ class NetworkDetachInterfaceFactory(Factory):
 
     IMAGE_CREATE = 0
     IMAGE_WAIT = 1
-    SERVER_CREATE = 2
-    SERVER_WAIT = 3
-    NETWORK_CREATE = 4
-    SUBNET_CREATE = 5
+    NETWORK_CREATE = 2
+    SUBNET_CREATE = 3
+    SERVER_CREATE = 4
+    SERVER_WAIT = 5
     PORT_CREATE = 6
     INTERFACE_ATTACH = 7
     INTERFACE_DETACH = 8
@@ -158,13 +162,13 @@ class TestSample(BaseTestCase):
 
     name = 'scratch'
     flavor = '1'
-    image_file = '/home/chalupaul/cirros-0.3.4-x86_64-disk.img'
+    image_file = '/Users/egle/Downloads/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
 
     def test_cloud_admin_all_cloud_admin_user(self):
         #TODO: This should work with cloud-admin
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
@@ -188,9 +192,9 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
 
     def test_cloud_admin_same_domain_different_user(self):
-	#TODO: This should work with cloud-admin
+        #TODO: This should work with cloud-admin
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
@@ -220,7 +224,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_all_cloud_admin_user(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
@@ -245,7 +249,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_same_domain_different_user(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
@@ -275,7 +279,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_server_and_snapshot(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
@@ -290,6 +294,8 @@ class TestSample(BaseTestCase):
                  args=(self.image_file,),
                  kwargs={'visibility': 'public'}) \
             .set(SnapFactory.IMAGE_WAIT, clients=creator) \
+            .set(SnapFactory.NETWORK_CREATE, clients=user1) \
+            .set(SampleFactory.SUBNET_CREATE, clients=user1) \
             .set(SnapFactory.SERVER_CREATE, clients=user1) \
             .set(SnapFactory.SERVER_WAIT, clients=user1) \
             .set(SnapFactory.SERVER_SHOW,
@@ -303,7 +309,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_network(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
@@ -329,7 +335,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_attach_interface(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
@@ -357,7 +363,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_detach_interface(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
             'Default', self.project, '_member_'
@@ -386,3 +392,170 @@ class TestSample(BaseTestCase):
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
+
+        ######
+        # bu_user
+
+    def test_bu_user_all_allowed(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_user = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        server_image_kwargs = {'image_key': 'server_image_id'}
+        SampleFactory(bu_user) \
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
+                 kwargs={'visibility': 'public'}) \
+            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
+            .set(SampleFactory.SERVER_IMAGE_WAIT,
+                 clients=creator,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_SHOW) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_all(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_user = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        server_image_kwargs = {'image_key': 'server_image_id'}
+        SampleFactory(bu_user) \
+            .set(SampleFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
+                 kwargs={'visibility': 'public'}) \
+            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
+            .set(SampleFactory.SERVER_IMAGE_WAIT,
+                 clients=creator,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_SHOW,
+                 kwargs=server_image_kwargs) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE,
+                 kwargs=server_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.NETWORK_CREATE, clients=creator) \
+            .set(SampleFactory.SUBNET_CREATE, clients=creator) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_different_domain_different_user_server_and_snapshot(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_user = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-user'
+        )
+
+        SnapFactory(bu_user) \
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
+                 kwargs={'visibility': 'public'}) \
+            .set(SnapFactory.IMAGE_WAIT, clients=creator) \
+            .set(SnapFactory.SERVER_CREATE, clients=user1) \
+            .set(SnapFactory.SERVER_WAIT, clients=user1) \
+            .set(SnapFactory.SERVER_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SnapFactory.SERVER_UPDATE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SnapFactory.SERVER_CREATE_IMAGE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_admin_different_domain_different_user_network(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_user = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-user'
+        )
+
+        NetworkPortFactory(bu_user) \
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
+                 kwargs={'visibility': 'public'}) \
+            .set(NetworkPortFactory.IMAGE_WAIT, clients=creator) \
+            .set(NetworkPortFactory.SERVER_CREATE, clients=user1) \
+            .set(NetworkPortFactory.SERVER_WAIT, clients=user1) \
+            .set(NetworkPortFactory.NETWORK_CREATE, clients=creator) \
+            .set(NetworkPortFactory.SUBNET_CREATE, clients=creator) \
+            .set(NetworkPortFactory.PORT_CREATE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_different_domain_different_user_attach_interface(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_user = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-user'
+        )
+
+        NetworkAttachInterfaceFactory(bu_admin) \
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
+                 kwargs={'visibility': 'public'}) \
+            .set(NetworkAttachInterfaceFactory.IMAGE_WAIT, clients=creator) \
+            .set(NetworkAttachInterfaceFactory.SERVER_CREATE, clients=user1) \
+            .set(NetworkAttachInterfaceFactory.SERVER_WAIT, clients=user1) \
+            .set(NetworkAttachInterfaceFactory.NETWORK_CREATE, clients=creator) \
+            .set(NetworkAttachInterfaceFactory.SUBNET_CREATE, clients=creator) \
+            .set(NetworkAttachInterfaceFactory.PORT_CREATE,
+                 clients=creator) \
+            .set(NetworkAttachInterfaceFactory.INTERFACE_ATTACH,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_different_domain_different_user_detach_interface(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, '_member_'
+        )
+        bu_user = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-user'
+        )
+
+        NetworkDetachInterfaceFactory(bu_user) \
+            .set(SnapFactory.IMAGE_CREATE,
+                 clients=creator,
+                 args=(self.image_file,),
+                 kwargs={'visibility': 'public'}) \
+            .set(NetworkDetachInterfaceFactory.IMAGE_WAIT, clients=creator) \
+            .set(NetworkDetachInterfaceFactory.SERVER_CREATE, clients=user1) \
+            .set(NetworkDetachInterfaceFactory.SERVER_WAIT, clients=user1) \
+            .set(NetworkDetachInterfaceFactory.NETWORK_CREATE, clients=creator) \
+            .set(NetworkDetachInterfaceFactory.SUBNET_CREATE, clients=creator) \
+            .set(NetworkDetachInterfaceFactory.PORT_CREATE,
+                 clients=creator) \
+            .set(NetworkDetachInterfaceFactory.INTERFACE_ATTACH,
+                 clients=creator) \
+            .set(NetworkDetachInterfaceFactory.INTERFACE_DETACH,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(NetworkDetachInterfaceFactory.SERVER_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+

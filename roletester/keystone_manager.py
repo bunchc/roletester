@@ -120,6 +120,7 @@ class KeystoneManager(object):
         :type role: string
         :returns: clients.ClientManager
         """
+
         if domain == '' or domain == None:
             domain = project
         hash = self._encode_hash(domain, project, role)
@@ -160,6 +161,7 @@ class KeystoneManager(object):
 		'domain_id': domain_resource.id
             }
             self.__users[hash] = ClientManager(**user_kwargs)
+            print "user: ", user_resource.name, " password: ", user_resource.password, " domain: ", domain_resource.name
             return self.__users[hash]
 
     def create_role_assignments(self,
