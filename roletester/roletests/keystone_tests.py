@@ -105,9 +105,11 @@ class TestSample(BaseTestCase):
         bu_admin = self.km.find_user_credentials(
             'CustomDomain', 'torst', 'bu-admin'
         )
+        domain_id = bu_admin.get_keystone().user_domain_id
+        print "BEHOLD %s" % bu_admin.auth_kwargs
         SampleFactory(bu_admin) \
             .set(GrantRoleFactory.PROJECT_CREATE,
-                 kwargs={'name':"egle1", 'domain':'CustomDomain'}, clients=bu_admin) \
+                 kwargs={'name':"egle1", 'domain':domain_id}, clients=bu_admin) \
             .produce() \
             .run(context=self.context)
 

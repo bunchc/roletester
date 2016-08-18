@@ -160,6 +160,7 @@ class KeystoneManager(object):
                 'project_domain_name': domain_resource.name,
 		        'domain_id': domain_resource.id
             }
+            print user_kwargs
             self.__users[hash] = ClientManager(**user_kwargs)
             return self.__users[hash]
 
