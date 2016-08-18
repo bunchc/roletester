@@ -91,7 +91,6 @@ class TestSample(BaseTestCase):
 
     name = 'scratch'
     flavor = '1'
-    image_file = '/home/chalupaul/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
 
     def test_cloud_admin_all(self):
@@ -104,9 +103,11 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_all(self):
         bu_admin = self.km.find_user_credentials(
-            'Default', 'torst', 'bu-admin'
+            'CustomDomain', 'torst', 'bu-admin'
         )
         SampleFactory(bu_admin) \
+            .set(GrantRoleFactory.PROJECT_CREATE,
+                 kwargs={'name':"egle1", 'domain':'CustomDomain'}, clients=bu_admin) \
             .produce() \
             .run(context=self.context)
 
@@ -174,6 +175,23 @@ class TestSample(BaseTestCase):
             .set(ProjectDeleteFactory.PROJECT_CREATE,
                  clients=creator) \
             .set(ProjectDeleteFactory.PROJECT_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+## bu_user
+    #todo : fix this
+    def test_bu_user_all(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-admin'
+        )
+        GrantRoleFactory(bu_admin) \
+            .set(GrantRoleFactory.PROJECT_CREATE) \
+            .set(GrantRoleFactory.USER_CREATE) \
+            .set(GrantRoleFactory.ROLE_GRANT_USER_PROJECT,
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)

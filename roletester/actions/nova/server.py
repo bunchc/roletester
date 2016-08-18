@@ -37,7 +37,10 @@ def create(clients,
     logger.info(": %s" % image.id)
     logger.info("Taking action create")
     meta = {"test-key": "test-value"}
-    server = nova.servers.create(name, image, flavor, meta)
+    nic = [{'net-id': context['network_id']}]
+
+    #todo: add networks with kwargs
+    server = nova.servers.create(name, image, flavor, meta=meta, nics=nic)
     context.update({'server_id': server.id})
     context.setdefault('stack', []).append({'server_id': server.id})
     logger.info("Created server {}".format(name))

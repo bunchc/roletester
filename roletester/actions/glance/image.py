@@ -1,4 +1,5 @@
 import time
+import os
 from roletester.exc import GlanceNotFound
 from roletester.log import logging
 
@@ -107,6 +108,45 @@ def show(clients, context, image_key='image_id', context_key='image_status'):
         (image.id, image.name, image.status)
     )
     context[context_key] = image.status.lower()
+
+
+def download(clients, context, image_key='image_id', context_key='image_status'):
+    """downloads a glance image.
+
+    Uses context['image_id'] or other specified with image_key
+    Sets context['image_status'] or other specified with context_key
+
+    :param clients: Client manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference context object.
+    :type context: Dict
+    :param image_key: Explicit image id to show
+    :type image_key: String
+    :param context_key: Context key to set. Useful for volume, server images
+    :type context_key: String
+    """
+
+    image_id = context[image_key]
+    logger.debug("Showing image %s" % image_id)
+    image = clients.get_glance().images.data(image_id)
+    logger.debug(
+        'Downloading image "%s"' % image_id
+    )
+    save_image(image, image_id)
+
+
+def save_image(data, path):
+    """Save an image to the specified path.
+    :param data: binary data of the image
+    :param path: path to save the image to
+    """
+    image = open(path, 'wb')
+    try:
+        for chunk in data:
+            image.write(chunk)
+    finally:
+        if path is not None:
+            image.close()
 
 
 def list(clients, context):
