@@ -22,7 +22,8 @@ def create(clients, context, name="test_project", domain='Default'):
 
     logger.debug("Taking action project.create {}.".format(name))
     keystone = clients.get_keystone()
-    project = keystone.projects.create(name, domain)
+    domain_object = keystone.domains.find(name=domain)
+    project = keystone.projects.create(name, domain_object)
     context.update({'project_obj': project})
     context.setdefault('stack', []).append({'project_obj': project})
 
