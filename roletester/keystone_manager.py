@@ -158,10 +158,10 @@ class KeystoneManager(object):
                 'auth_url': self.env_vars['auth_url'],
                 'user_domain_name': domain_resource.name,
                 'project_domain_name': domain_resource.name,
-		'domain_id': domain_resource.id
+		        'domain_id': domain_resource.id
             }
+            print user_kwargs
             self.__users[hash] = ClientManager(**user_kwargs)
-            print "user: ", user_resource.name, " password: ", user_resource.password, " domain: ", domain_resource.name
             return self.__users[hash]
 
     def create_role_assignments(self,
