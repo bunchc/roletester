@@ -55,6 +55,32 @@ def grant_user_project(clients, context, role="_member_"):
     context.update({'role': role_uuid})
 
 
+
+def grant_user_domain(clients, context, role="_member_", domain="Default"):
+    """Grant a role to (user,project)
+
+    Uses context['user_obj']
+    Uses context['project_obj']
+    Sets context['role']
+
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param role: Name of the role to grant
+    :type role: String
+    :param domain: Domain id for the new user
+    :type domain: String
+    """
+
+    user = context['user_obj']
+    logger.debug("Taking action role.grant_user_project {}.".format(user.name))
+    keystone = clients.get_keystone()
+    role_uuid = _get_role_uuid_by_name(keystone, role)
+    keystone.roles.grant(role_uuid, user=user, domain=domain)
+    context.update({'role': role_uuid})
+
+
 def revoke_user_project(clients, context):
     """Revokes a role from (user, project)
 
@@ -78,3 +104,30 @@ def revoke_user_project(clients, context):
     )
     keystone = clients.get_keystone()
     keystone.roles.revoke(role_uuid, user=user, project=project)
+
+
+def revoke_user_domain(clients, context, domain="Default"):
+    """Revokes a role from (user, project)
+
+    Uses context['user_obj']
+    Uses context['project_obj']
+    Uses context['role']
+    Removes context['role']
+
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param domain: Domain id for the new user
+    :type domain: String
+    """
+
+    user = context['user_obj']
+    role_uuid = context['role']
+
+    logger.debug(
+        "Taking action role.revoke_user_project {}.".format(user.name)
+    )
+    keystone = clients.get_keystone()
+    keystone.roles.revoke(role_uuid, user=user, domain=domain)
+

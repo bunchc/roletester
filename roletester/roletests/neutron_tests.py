@@ -10,10 +10,12 @@ from roletester.actions.neutron import network_delete
 from roletester.actions.neutron import subnet_create
 from roletester.actions.neutron import subnet_show
 from roletester.actions.neutron import subnet_delete
+from roletester.actions.neutron import subnet_update
 from roletester.actions.neutron import router_create
 from roletester.actions.neutron import router_show
 from roletester.actions.neutron import router_add_interface
 from roletester.actions.neutron import router_remove_interface
+from roletester.actions.neutron import router_update
 from roletester.actions.neutron import router_delete
 from roletester.actions.neutron import security_group_create
 from roletester.actions.neutron import security_group_show
@@ -41,8 +43,6 @@ logger = logging.getLogger("roletester.neutron")
 class SampleFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         network_show,
         subnet_create,
@@ -66,36 +66,32 @@ class SampleFactory(Factory):
         network_delete
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    NETWORK_SHOW = 3
-    SUBNET_CREATE = 4
-    SUBNET_SHOW = 5
-    SERVER_CREATE = 6
-    SERVER_WAIT = 7
-    SECURITY_GROUP_CREATE = 8
-    SECURITY_GROUP_SHOW = 9
-    SECURITY_GROUP_RULE_CREATE = 10
-    SECURITY_GROUP_ADD_TO_SERVER = 11
-    SECURITY_GROUP_REMOVE_FROM_SERVER = 12
-    SECURITY_GROUP_RULE_DELETE = 13
-    SECURITY_GROUP_DELETE = 14
-    SERVER_DELETE = 15
-    ROUTER_CREATE = 16
-    ROUTER_SHOW = 17
-    ROUTER_ADD_INTERFACE = 18
-    ROUTER_REMOVE_INTERFACE = 19
-    ROUTER_DELETE = 20
-    SUBNET_DELETE = 21
-    NETWORK_DELETE = 22
+    NETWORK_CREATE = 0
+    NETWORK_SHOW = 1
+    SUBNET_CREATE = 2
+    SUBNET_SHOW = 3
+    SERVER_CREATE = 4
+    SERVER_WAIT = 5
+    SECURITY_GROUP_CREATE = 6
+    SECURITY_GROUP_SHOW = 7
+    SECURITY_GROUP_RULE_CREATE = 8
+    SECURITY_GROUP_ADD_TO_SERVER = 9
+    SECURITY_GROUP_REMOVE_FROM_SERVER = 10
+    SECURITY_GROUP_RULE_DELETE = 11
+    SECURITY_GROUP_DELETE = 12
+    SERVER_DELETE = 13
+    ROUTER_CREATE = 14
+    ROUTER_SHOW = 15
+    ROUTER_ADD_INTERFACE = 16
+    ROUTER_REMOVE_INTERFACE = 17
+    ROUTER_DELETE = 18
+    SUBNET_DELETE = 19
+    NETWORK_DELETE = 20
 
 
 class SecgroupAddFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         network_show,
         subnet_create,
@@ -108,25 +104,21 @@ class SecgroupAddFactory(Factory):
         security_group_add_to_server,
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    NETWORK_SHOW = 3
-    SUBNET_CREATE = 4
-    SUBNET_SHOW = 5
-    SERVER_CREATE = 6
-    SERVER_WAIT = 7
-    SECURITY_GROUP_CREATE = 8
-    SECURITY_GROUP_SHOW = 9
-    SECURITY_GROUP_RULE_CREATE = 10
-    SECURITY_GROUP_ADD_TO_SERVER = 11
+    NETWORK_CREATE = 0
+    NETWORK_SHOW = 1
+    SUBNET_CREATE = 2
+    SUBNET_SHOW = 3
+    SERVER_CREATE = 4
+    SERVER_WAIT = 5
+    SECURITY_GROUP_CREATE = 6
+    SECURITY_GROUP_SHOW = 7
+    SECURITY_GROUP_RULE_CREATE = 8
+    SECURITY_GROUP_ADD_TO_SERVER = 9
 
 
 class AddInterfaceFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         subnet_create,
         server_create,
@@ -144,22 +136,20 @@ class AddInterfaceFactory(Factory):
 
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    SUBNET_CREATE = 3
-    SERVER_CREATE = 4
-    SERVER_WAIT = 5
-    SECURITY_GROUP_CREATE = 6
-    SECURITY_GROUP_RULE_CREATE = 7
-    SECURITY_GROUP_ADD_TO_SERVER = 8
-    SECURITY_GROUP_REMOVE_FROM_SERVER = 9
-    SECURITY_GROUP_RULE_DELETE = 10
-    SECURITY_GROUP_DELETE = 11
-    SERVER_DELETE = 12
-    ROUTER_CREATE = 13
-    ROUTER_SHOW = 14
-    ROUTER_ADD_INTERFACE = 15
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    SERVER_CREATE = 2
+    SERVER_WAIT = 3
+    SECURITY_GROUP_CREATE = 4
+    SECURITY_GROUP_RULE_CREATE = 5
+    SECURITY_GROUP_ADD_TO_SERVER = 6
+    SECURITY_GROUP_REMOVE_FROM_SERVER = 7
+    SECURITY_GROUP_RULE_DELETE = 8
+    SECURITY_GROUP_DELETE = 9
+    SERVER_DELETE = 10
+    ROUTER_CREATE = 11
+    ROUTER_SHOW = 12
+    ROUTER_ADD_INTERFACE = 13
 
 
 class RouterDeleteFactory(Factory):
@@ -173,6 +163,17 @@ class RouterDeleteFactory(Factory):
     ROUTER_DELETE = 1
 
 
+class RouterUpdateFactory(Factory):
+
+    _ACTIONS = [
+        router_create,
+        router_update
+    ]
+
+    ROUTER_CREATE = 0
+    ROUTER_UPDATE = 1
+
+
 class SubnetDeleteFactory(Factory):
 
     _ACTIONS = [
@@ -184,6 +185,19 @@ class SubnetDeleteFactory(Factory):
     NETWORK_CREATE = 0
     SUBNET_CREATE = 1
     SUBNET_DELETE = 2
+
+
+class SubnetUpdateFactory(Factory):
+
+    _ACTIONS = [
+        network_create,
+        subnet_create,
+        subnet_update
+    ]
+
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    SUBNET_UPDATE = 2
 
 
 class NetworkDeleteFactory(Factory):
@@ -224,11 +238,14 @@ class FloatingIPFactory(Factory):
     FLOATINGIP_DELETE = 9
 
 
+
 class TestSample(BaseTestCase):
 
     name = 'scratch'
     flavor = '1'
-    image_file = '/home/chalupaul/cirros-0.3.4-x86_64-disk.img'
+    # image_file = '/home/chalupaul/cirros-0.3.4-x86_64-disk.img'
+    image_file = '/Users/egle/Downloads/cirros-0.3.4-x86_64-disk.img'
+
     project = randomname()
 
     def setUp(self):
@@ -244,14 +261,35 @@ class TestSample(BaseTestCase):
             raise NetworkNotFoundClient(message=err_str)
         self.context["external_network_id"] = public_network
 
+        kwargs = {
+            'name': "glance test image",
+            'disk_format': 'qcow2',
+            'container_format': 'bare',
+            'is_public': 'public'
+        }
+        try:
+            image_id = self.context['image_id']
+        except Exception:
+            logger.info("No image_id found, creating image")
+
+            glance = self.km.admin_client_manager.get_glance()
+            images = glance.images.list()
+            for img in images:
+                if img.name == "glance test image" and img.status == "active" and img.visibility == 'public':
+                    logger.info("found image with image id: %s" %img.id)
+                    self.context.update(image_id=img.id)
+            if 'image_id' in self.context:
+                logger.info("image_id in context: %s" %self.context['image_id'])
+            else:
+                image_create(self.km.admin_client_manager, self.context, self.image_file)
+                image_id = self.context['image_id']
+
     def test_cloud_admin_all(self):
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
         )
 
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 args=(self.image_file,)) \
             .produce() \
             .run(context=self.context)
 
@@ -275,11 +313,6 @@ class TestSample(BaseTestCase):
         )
 
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,)) \
-            .set(SampleFactory.IMAGE_WAIT,
-                 clients=creator) \
             .set(SampleFactory.NETWORK_CREATE,
                  clients=user1) \
             .set(SampleFactory.SUBNET_CREATE,
@@ -331,8 +364,6 @@ class TestSample(BaseTestCase):
         )
 
         SampleFactory(bu_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 args=(self.image_file,)) \
             .produce() \
             .run(context=self.context)
 
@@ -356,11 +387,6 @@ class TestSample(BaseTestCase):
         )
 
         SampleFactory(bu_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,)) \
-            .set(SampleFactory.IMAGE_WAIT,
-                 clients=creator) \
             .set(SampleFactory.NETWORK_CREATE,
                  clients=user1) \
             .set(SampleFactory.SUBNET_CREATE,
@@ -450,11 +476,6 @@ class TestSample(BaseTestCase):
         )
 
         SecgroupAddFactory(bu_admin) \
-            .set(SecgroupAddFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,)) \
-            .set(SecgroupAddFactory.IMAGE_WAIT,
-                 clients=creator) \
             .set(SecgroupAddFactory.NETWORK_CREATE,
                  clients=user1) \
             .set(SecgroupAddFactory.NETWORK_SHOW,
@@ -490,11 +511,6 @@ class TestSample(BaseTestCase):
         )
 
         AddInterfaceFactory(bu_admin) \
-            .set(AddInterfaceFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,)) \
-            .set(AddInterfaceFactory.IMAGE_WAIT,
-                 clients=creator) \
             .set(AddInterfaceFactory.NETWORK_CREATE,
                  clients=user1) \
             .set(AddInterfaceFactory.SUBNET_CREATE,
@@ -575,3 +591,192 @@ class TestSample(BaseTestCase):
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
+
+    def test_cloud_admin_subnet_update(self):
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SubnetUpdateFactory(cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_admin_subnet_update(self):
+
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-admin'
+        )
+        SubnetUpdateFactory(bu_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_admin_router_update(self):
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        RouterUpdateFactory(cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_admin_router_update(self):
+
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-admin'
+        )
+        RouterUpdateFactory(bu_admin) \
+            .produce() \
+            .run(context=self.context)
+
+# bu-user
+#get subnet, get subnet pool
+#get network details
+    def test_bu_user(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+
+        SampleFactory(cloud_admin) \
+            .set(SampleFactory.NETWORK_CREATE) \
+            .set(SampleFactory.NETWORK_SHOW, clients=user1) \
+            .set(SampleFactory.SUBNET_CREATE) \
+            .set(SampleFactory.SUBNET_SHOW, clients=user1) \
+            .set(SampleFactory.SERVER_CREATE) \
+            .set(SampleFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_CREATE) \
+            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE) \
+            .set(SampleFactory.SERVER_DELETE) \
+            .set(SampleFactory.ROUTER_CREATE) \
+            .set(SampleFactory.ROUTER_SHOW, clients=user1) \
+            .set(SampleFactory.ROUTER_ADD_INTERFACE) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_network_create(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        SampleFactory(user1) \
+            .set(SampleFactory.NETWORK_CREATE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_subnet_create(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SampleFactory(user1) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_router_create(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SampleFactory(user1) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.NETWORK_SHOW) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_CREATE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_network_delete(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SampleFactory(user1) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.NETWORK_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_subnet_delete(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SampleFactory(user1) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_router_delete(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SampleFactory(user1) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_subnet_update(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SubnetUpdateFactory(user1) \
+            .set(SubnetUpdateFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_router_update(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        RouterUpdateFactory(user1) \
+            .set(RouterUpdateFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(RouterUpdateFactory.ROUTER_UPDATE, expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+
+    def test_bu_user_get_floatingip(self):

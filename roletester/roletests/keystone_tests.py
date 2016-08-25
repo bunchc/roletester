@@ -3,9 +3,14 @@ from roletester.actions.keystone import user_create
 from roletester.actions.keystone import user_delete
 from roletester.actions.keystone import project_create
 from roletester.actions.keystone import project_delete
+from roletester.actions.keystone import project_list
+from roletester.actions.keystone import project_list_user
 from roletester.actions.keystone import role_grant_user_project
+from roletester.actions.keystone import role_grant_user_domain
 from roletester.actions.keystone import role_revoke_user_project
+from roletester.actions.keystone import role_revoke_user_domain
 from roletester.exc import KeystoneUnauthorized
+from roletester.exc import KeystoneForbidden
 from roletester.scenario import ScenarioFactory as Factory
 from roletester.utils import randomname
 
@@ -19,6 +24,7 @@ class SampleFactory(Factory):
 
     _ACTIONS = [
         project_create,
+        project_list,
         user_create,
         role_grant_user_project,
         role_revoke_user_project,
@@ -28,11 +34,12 @@ class SampleFactory(Factory):
     ]
 
     PROJECT_CREATE = 0
-    USER_CREATE = 1
-    ROLE_GRANT_USER_PROJECT = 2
-    ROLE_REVOKE_USER_PROJECT = 3
-    USER_DELETE = 4
-    PROJECT_DELETE = 5
+    PROJECT_LIST = 1
+    USER_CREATE = 2
+    ROLE_GRANT_USER_PROJECT = 3
+    ROLE_REVOKE_USER_PROJECT = 4
+    USER_DELETE = 5
+    PROJECT_DELETE = 6
 
 
 class GrantRoleFactory(Factory):
@@ -40,12 +47,12 @@ class GrantRoleFactory(Factory):
     _ACTIONS = [
         project_create,
         user_create,
-        role_grant_user_project,
+        role_grant_user_domain
     ]
 
     PROJECT_CREATE = 0
     USER_CREATE = 1
-    ROLE_GRANT_USER_PROJECT = 2
+    ROLE_GRANT_USER_DOMAIN = 2
 
 
 class RevokeRoleFactory(Factory):
@@ -53,14 +60,14 @@ class RevokeRoleFactory(Factory):
     _ACTIONS = [
         project_create,
         user_create,
-        role_grant_user_project,
-        role_revoke_user_project
+        role_grant_user_domain,
+        role_revoke_user_domain
     ]
 
     PROJECT_CREATE = 0
     USER_CREATE = 1
-    ROLE_GRANT_USER_PROJECT = 2
-    ROLE_REVOKE_USER_PROJECT = 3
+    ROLE_GRANT_USER_DOMAIN = 2
+    ROLE_REVOKE_USER_DOMAIN = 3
 
 
 class UserDeleteFactory(Factory):
@@ -87,6 +94,18 @@ class ProjectDeleteFactory(Factory):
     PROJECT_DELETE = 1
 
 
+class ProjectListFactory(Factory):
+
+    _ACTIONS = [
+        project_create,
+        user_create,
+        project_list_user
+    ]
+
+    PROJECT_CREATE = 0
+    USER_CREATE = 1
+    PROJECT_LIST_USER = 2
+
 class TestSample(BaseTestCase):
 
     name = 'scratch'
@@ -106,9 +125,9 @@ class TestSample(BaseTestCase):
             'CustomDomain', 'torst', 'bu-admin'
         )
         domain_id = bu_admin.auth_kwargs['domain_id']
-        SampleFactory(bu_admin) \
+        GrantRoleFactory(bu_admin) \
             .set(GrantRoleFactory.PROJECT_CREATE,
-                 kwargs={'name':"egle1", 'domain':domain_id}) \
+                 kwargs={'domain':domain_id}) \
             .set(GrantRoleFactory.USER_CREATE,
                  kwargs={'domain':domain_id}) \
             .produce() \
@@ -116,85 +135,126 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_grant_roles(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'CustomDomain', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
         )
+        creator_domain_id = creator.auth_kwargs['domain_id']
+        domain_id = bu_admin.auth_kwargs['domain_id']
         GrantRoleFactory(bu_admin) \
             .set(GrantRoleFactory.PROJECT_CREATE,
-                 clients=creator) \
+                kwargs={'name': "project1", 'domain': creator_domain_id},
+                clients=creator) \
             .set(GrantRoleFactory.USER_CREATE,
+                 kwargs={'domain': creator_domain_id},
                  clients=creator) \
-            .set(GrantRoleFactory.ROLE_GRANT_USER_PROJECT,
-                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(GrantRoleFactory.ROLE_GRANT_USER_DOMAIN,
+                 kwargs={'domain': domain_id}) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_different_domain_different_user_revoke_roles(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'CustomDomain', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
         )
+        creator_domain_id = creator.auth_kwargs['domain_id']
+        domain_id = bu_admin.auth_kwargs['domain_id']
         RevokeRoleFactory(bu_admin) \
             .set(RevokeRoleFactory.PROJECT_CREATE,
+                 kwargs={'name': "project1", 'domain': creator_domain_id},
                  clients=creator) \
             .set(RevokeRoleFactory.USER_CREATE,
+                 kwargs={'domain': creator_domain_id},
                  clients=creator) \
-            .set(RevokeRoleFactory.ROLE_GRANT_USER_PROJECT,
-                 clients=creator) \
-            .set(RevokeRoleFactory.ROLE_REVOKE_USER_PROJECT,
-                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(RevokeRoleFactory.ROLE_GRANT_USER_DOMAIN,
+                 kwargs={'domain': domain_id}) \
+            .set(RevokeRoleFactory.ROLE_REVOKE_USER_DOMAIN,
+                 kwargs={'domain': domain_id}) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_different_domain_different_user_delete(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'CustomDomain', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
         )
+        creator_domain_id = creator.auth_kwargs['domain_id']
+        domain_id = bu_admin.auth_kwargs['domain_id']
+
         UserDeleteFactory(bu_admin) \
             .set(UserDeleteFactory.PROJECT_CREATE,
+                 kwargs={'domain': creator_domain_id},
                  clients=creator) \
             .set(UserDeleteFactory.USER_CREATE,
+                 kwargs={'domain': creator_domain_id},
                  clients=creator) \
             .set(UserDeleteFactory.USER_DELETE,
-                 expected_exceptions=[KeystoneUnauthorized]) \
+                 expected_exceptions=[KeystoneForbidden]) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_different_domain_different_project_delete(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'CustomDomain', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
         )
+        creator_domain_id = creator.auth_kwargs['domain_id']
         ProjectDeleteFactory(bu_admin) \
             .set(ProjectDeleteFactory.PROJECT_CREATE,
+                 kwargs={'domain': creator_domain_id},
                  clients=creator) \
             .set(ProjectDeleteFactory.PROJECT_DELETE,
-                 expected_exceptions=[KeystoneUnauthorized]) \
+                 expected_exceptions=[KeystoneForbidden]) \
             .produce() \
             .run(context=self.context)
 
 ## bu_user
-    #todo : fix this
     def test_bu_user_all(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'bu-user'
+            'CustomDomain', 'torst', 'bu-user'
         )
         bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'CustomDomain', 'torst', 'bu-admin'
         )
-        GrantRoleFactory(bu_admin) \
-            .set(GrantRoleFactory.PROJECT_CREATE) \
-            .set(GrantRoleFactory.USER_CREATE) \
-            .set(GrantRoleFactory.ROLE_GRANT_USER_PROJECT,
-                 expected_exceptions=[KeystoneUnauthorized]) \
+        creator_domain_id = creator.auth_kwargs['domain_id']
+        domain_id = bu_admin.auth_kwargs['domain_id']
+        username = creator.auth_kwargs['username']
+        ProjectListFactory(bu_admin) \
+            .set(ProjectListFactory.PROJECT_CREATE,
+                 kwargs={'domain': domain_id}) \
+            .set(ProjectListFactory.USER_CREATE,
+                 kwargs={'domain': domain_id}) \
+            .set(ProjectListFactory.PROJECT_LIST_USER,
+                 kwargs={'domain': creator_domain_id, 'user': username},
+                 clients=creator) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_user_different_domain(self):
+        creator = self.km.find_user_credentials(
+            'CustomDomain', self.project, 'bu-user'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'CustomDomain_1', 'torst', 'bu-admin'
+        )
+        creator_domain_id = creator.auth_kwargs['domain_id']
+        domain_id = bu_admin.auth_kwargs['domain_id']
+        username = creator.auth_kwargs['username']
+        ProjectListFactory(bu_admin) \
+            .set(ProjectListFactory.PROJECT_CREATE,
+                 kwargs={'domain': domain_id}) \
+            .set(ProjectListFactory.USER_CREATE,
+                 kwargs={'domain': domain_id}) \
+            .set(ProjectListFactory.PROJECT_LIST_USER,
+                 kwargs={'domain': creator_domain_id, 'user': username},
+                 clients=creator) \
             .produce() \
             .run(context=self.context)

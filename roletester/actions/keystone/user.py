@@ -68,3 +68,4 @@ def change_name(clients, context, new_name="new_test_user"):
     logger.debug("Taking action user.change_name {}.".format(user.name))
     keystone = clients.get_keystone()
     keystone.users.update(user, name=new_name)
+

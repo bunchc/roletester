@@ -48,3 +48,40 @@ def delete(clients, context):
         keystone.projects.delete(project)
     except KeystoneNotFound:
         pass
+
+
+def list(clients, context, domain='Default'):
+    """Create a new keystone project
+
+    Sets context['project_obj']
+
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param domain: The domain in which to create the project
+    :type domain: String
+    """
+
+    logger.debug("Taking action project.list.")
+    keystone = clients.get_keystone()
+    project = keystone.projects.list(domain)
+
+
+def list_user(clients, context, domain='Default', user=None):
+    """Create a new keystone project
+
+    Sets context['project_obj']
+
+    :param clients: Client Manager
+    :type clients: roletester.clients.ClientManager
+    :param context: Pass by reference object
+    :type context: Dict
+    :param domain: The domain in which to create the project
+    :type domain: String
+    """
+
+    user = context['user_obj']
+    logger.debug("Taking action project.list.")
+    keystone = clients.get_keystone()
+    project = keystone.projects.list(domain, user)

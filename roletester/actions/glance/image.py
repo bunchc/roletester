@@ -38,7 +38,7 @@ def create(clients,
         'name': name,
         'disk_format': disk_format,
         'container_format': container_format,
-        'visibility': visibility
+        'is_public': visibility
     }
     glance = clients.get_glance()
     image = glance.images.create(**kwargs)
