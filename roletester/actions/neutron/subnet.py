@@ -7,7 +7,7 @@ logger = logging.getLogger('roletester.actions.neutron.subnet')
 def create(clients, context,
            name="test_subnet",
            ip_version=4,
-           cidr="10.10.10.0/24"):
+           cidr="11.10.10.0/24"):
     """Create a subnet
 
     Uses context['network_id']
