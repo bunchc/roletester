@@ -778,5 +778,58 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
-
     def test_bu_user_get_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-admin'
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE)\
+            .set(FloatingIPFactory.SUBNET_CREATE)\
+            .set(FloatingIPFactory.PORT_CREATE)\
+            .set(FloatingIPFactory.ROUTER_CREATE)\
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE)\
+            .set(FloatingIPFactory.FLOATINGIP_CREATE)\
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    #todo: re-test, seems broken
+    def test_bu_user_get_floatingip_diff_domain(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-user'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-admin'
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE)\
+            .set(FloatingIPFactory.SUBNET_CREATE)\
+            .set(FloatingIPFactory.PORT_CREATE)\
+            .set(FloatingIPFactory.ROUTER_CREATE)\
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE)\
+            .set(FloatingIPFactory.FLOATINGIP_CREATE) \
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 clients=user1, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 clients=user1, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+
+

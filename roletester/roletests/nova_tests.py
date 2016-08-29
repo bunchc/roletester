@@ -25,45 +25,39 @@ logger = logging.getLogger("roletester.nova")
 class SampleFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         subnet_create,
         server_create,
         server_wait_for_status,
         server_show,
+        port_create,
+        interface_attach,
+        interface_detach,
         server_update,
         server_create_image,
         image_wait_for_status,
         image_delete,
-        port_create,
-        interface_attach,
-        interface_detach,
         server_delete
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    SUBNET_CREATE = 3
-    SERVER_CREATE = 4
-    SERVER_WAIT = 5
-    SERVER_SHOW = 6
-    SERVER_UPDATE = 7
-    SERVER_CREATE_IMAGE = 8
-    SERVER_IMAGE_WAIT = 9
-    SERVER_IMAGE_DELETE = 10
-    PORT_CREATE = 11
-    INTERFACE_ATTACH = 12
-    INTERFACE_DETACH = 13
-    SERVER_DELETE = 14
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    SERVER_CREATE = 2
+    SERVER_WAIT = 3
+    SERVER_SHOW = 4
+    PORT_CREATE = 5
+    INTERFACE_ATTACH = 6
+    INTERFACE_DETACH = 7
+    SERVER_UPDATE = 8
+    SERVER_CREATE_IMAGE = 9
+    SERVER_IMAGE_WAIT = 10
+    SERVER_IMAGE_DELETE = 11
+    SERVER_DELETE = 12
 
 
 class SnapFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         subnet_create,
         server_create,
@@ -73,22 +67,18 @@ class SnapFactory(Factory):
         server_create_image,
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    SUBNET_CREATE = 3
-    SERVER_CREATE = 4
-    SERVER_WAIT = 5
-    SERVER_SHOW = 6
-    SERVER_UPDATE = 7
-    SERVER_CREATE_IMAGE = 8
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    SERVER_CREATE = 2
+    SERVER_WAIT = 3
+    SERVER_SHOW = 4
+    SERVER_UPDATE = 5
+    SERVER_CREATE_IMAGE = 6
 
 
 class NetworkPortFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         subnet_create,
         server_create,
@@ -96,23 +86,19 @@ class NetworkPortFactory(Factory):
         port_create,
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    SUBNET_CREATE = 3
-    SERVER_CREATE = 4
-    SERVER_WAIT = 5
-    PORT_CREATE = 6
-    INTERFACE_ATTACH = 7
-    INTERFACE_DETACH = 8
-    SERVER_DELETE = 9
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    SERVER_CREATE = 2
+    SERVER_WAIT = 3
+    PORT_CREATE = 4
+    INTERFACE_ATTACH = 5
+    INTERFACE_DETACH = 6
+    SERVER_DELETE = 7
 
 
 class NetworkAttachInterfaceFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         subnet_create,
         server_create,
@@ -121,21 +107,17 @@ class NetworkAttachInterfaceFactory(Factory):
         interface_attach,
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    SUBNET_CREATE = 3
-    SERVER_CREATE = 4
-    SERVER_WAIT = 5
-    PORT_CREATE = 6
-    INTERFACE_ATTACH = 7
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    SERVER_CREATE = 2
+    SERVER_WAIT = 3
+    PORT_CREATE = 4
+    INTERFACE_ATTACH = 5
 
 
 class NetworkDetachInterfaceFactory(Factory):
 
     _ACTIONS = [
-        image_create,
-        image_wait_for_status,
         network_create,
         subnet_create,
         server_create,
@@ -146,16 +128,14 @@ class NetworkDetachInterfaceFactory(Factory):
         server_delete
     ]
 
-    IMAGE_CREATE = 0
-    IMAGE_WAIT = 1
-    NETWORK_CREATE = 2
-    SUBNET_CREATE = 3
-    SERVER_CREATE = 4
-    SERVER_WAIT = 5
-    PORT_CREATE = 6
-    INTERFACE_ATTACH = 7
-    INTERFACE_DETACH = 8
-    SERVER_DELETE = 9
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
+    SERVER_CREATE = 2
+    SERVER_WAIT = 3
+    PORT_CREATE = 4
+    INTERFACE_ATTACH = 5
+    INTERFACE_DETACH = 6
+    SERVER_DELETE = 7
 
 
 class TestSample(BaseTestCase):
@@ -164,6 +144,32 @@ class TestSample(BaseTestCase):
     flavor = '1'
     image_file = '/Users/egle/Downloads/cirros-0.3.4-x86_64-disk.img'
     project = randomname()
+
+    def setUp(self):
+        super(TestSample, self).setUp()
+
+        kwargs = {
+            'name': "glance test image",
+            'disk_format': 'qcow2',
+            'container_format': 'bare',
+            'is_public': 'public'
+        }
+        try:
+            image_id = self.context['image_id']
+        except Exception:
+            logger.info("No image_id found, creating image")
+
+            glance = self.km.admin_client_manager.get_glance()
+            images = glance.images.list()
+            for img in images:
+                if img.name == "glance test image" and img.status == "active" and img.visibility == 'public':
+                    logger.info("found image with image id: %s" %img.id)
+                    self.context.update(image_id=img.id)
+            if 'image_id' in self.context:
+                logger.info("image_id in context: %s" %self.context['image_id'])
+            else:
+                image_create(self.km.admin_client_manager, self.context, self.image_file)
+                image_id = self.context['image_id']
 
     def test_cloud_admin_all_cloud_admin_user(self):
         #TODO: This should work with cloud-admin
@@ -176,14 +182,6 @@ class TestSample(BaseTestCase):
 
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
-            .set(SampleFactory.SERVER_IMAGE_WAIT,
-                 clients=creator,
-                 kwargs=server_image_kwargs) \
             .set(SampleFactory.SERVER_IMAGE_DELETE,
                  kwargs=server_image_kwargs) \
             .set(SampleFactory.NETWORK_CREATE, clients=creator) \
@@ -205,15 +203,8 @@ class TestSample(BaseTestCase):
 
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,), 
-                 kwargs={'visibility': 'public'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_CREATE, clients=user1) \
             .set(SampleFactory.SERVER_WAIT, clients=user1) \
-            .set(SampleFactory.SERVER_IMAGE_WAIT,
-                 kwargs=server_image_kwargs) \
             .set(SampleFactory.SERVER_IMAGE_DELETE,
                  clients=creator,
                  kwargs=server_image_kwargs) \
@@ -232,11 +223,6 @@ class TestSample(BaseTestCase):
 
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(bu_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_IMAGE_WAIT,
                  clients=creator,
                  kwargs=server_image_kwargs) \
@@ -260,11 +246,6 @@ class TestSample(BaseTestCase):
 
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(bu_admin) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_CREATE, clients=user1) \
             .set(SampleFactory.SERVER_WAIT, clients=user1) \
             .set(SampleFactory.SERVER_IMAGE_WAIT,
@@ -289,11 +270,6 @@ class TestSample(BaseTestCase):
         )
 
         SnapFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(SnapFactory.IMAGE_WAIT, clients=creator) \
             .set(SnapFactory.NETWORK_CREATE, clients=user1) \
             .set(SampleFactory.SUBNET_CREATE, clients=user1) \
             .set(SnapFactory.SERVER_CREATE, clients=user1) \
@@ -319,11 +295,6 @@ class TestSample(BaseTestCase):
         )
 
         NetworkPortFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(NetworkPortFactory.IMAGE_WAIT, clients=creator) \
             .set(NetworkPortFactory.SERVER_CREATE, clients=user1) \
             .set(NetworkPortFactory.SERVER_WAIT, clients=user1) \
             .set(NetworkPortFactory.NETWORK_CREATE, clients=creator) \
@@ -345,11 +316,6 @@ class TestSample(BaseTestCase):
         )
 
         NetworkAttachInterfaceFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(NetworkAttachInterfaceFactory.IMAGE_WAIT, clients=creator) \
             .set(NetworkAttachInterfaceFactory.SERVER_CREATE, clients=user1) \
             .set(NetworkAttachInterfaceFactory.SERVER_WAIT, clients=user1) \
             .set(NetworkAttachInterfaceFactory.NETWORK_CREATE, clients=creator) \
@@ -373,11 +339,6 @@ class TestSample(BaseTestCase):
         )
 
         NetworkDetachInterfaceFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(NetworkDetachInterfaceFactory.IMAGE_WAIT, clients=creator) \
             .set(NetworkDetachInterfaceFactory.SERVER_CREATE, clients=user1) \
             .set(NetworkDetachInterfaceFactory.SERVER_WAIT, clients=user1) \
             .set(NetworkDetachInterfaceFactory.NETWORK_CREATE, clients=creator) \
@@ -406,15 +367,11 @@ class TestSample(BaseTestCase):
 
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(bu_user) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_IMAGE_WAIT,
                  clients=creator,
                  kwargs=server_image_kwargs) \
             .set(SampleFactory.SERVER_SHOW) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE, clients=creator) \
             .produce() \
             .run(context=self.context)
 
@@ -428,20 +385,14 @@ class TestSample(BaseTestCase):
 
         server_image_kwargs = {'image_key': 'server_image_id'}
         SampleFactory(bu_user) \
-            .set(SampleFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(SampleFactory.IMAGE_WAIT, clients=creator) \
             .set(SampleFactory.SERVER_IMAGE_WAIT,
                  clients=creator,
                  kwargs=server_image_kwargs) \
-            .set(SampleFactory.SERVER_SHOW,
-                 kwargs=server_image_kwargs) \
-            .set(SampleFactory.SERVER_IMAGE_DELETE,
-                 kwargs=server_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.SERVER_SHOW) \
             .set(SampleFactory.NETWORK_CREATE, clients=creator) \
             .set(SampleFactory.SUBNET_CREATE, clients=creator) \
+            .set(SampleFactory.SERVER_IMAGE_DELETE,
+                 kwargs=server_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
 
@@ -457,15 +408,12 @@ class TestSample(BaseTestCase):
         )
 
         SnapFactory(bu_user) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(SnapFactory.IMAGE_WAIT, clients=creator) \
             .set(SnapFactory.SERVER_CREATE, clients=user1) \
             .set(SnapFactory.SERVER_WAIT, clients=user1) \
             .set(SnapFactory.SERVER_SHOW,
                  expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SnapFactory.NETWORK_CREATE, clients=creator) \
+            .set(SnapFactory.SUBNET_CREATE, clients=creator) \
             .set(SnapFactory.SERVER_UPDATE,
                  expected_exceptions=[KeystoneUnauthorized]) \
             .set(SnapFactory.SERVER_CREATE_IMAGE,
@@ -473,7 +421,7 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
-    def test_bu_admin_different_domain_different_user_network(self):
+    def test_bu_user_different_domain_different_user_network(self):
         creator = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
         )
@@ -485,11 +433,6 @@ class TestSample(BaseTestCase):
         )
 
         NetworkPortFactory(bu_user) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(NetworkPortFactory.IMAGE_WAIT, clients=creator) \
             .set(NetworkPortFactory.SERVER_CREATE, clients=user1) \
             .set(NetworkPortFactory.SERVER_WAIT, clients=user1) \
             .set(NetworkPortFactory.NETWORK_CREATE, clients=creator) \
@@ -510,12 +453,7 @@ class TestSample(BaseTestCase):
             'Domain2', self.project, 'bu-user'
         )
 
-        NetworkAttachInterfaceFactory(bu_admin) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(NetworkAttachInterfaceFactory.IMAGE_WAIT, clients=creator) \
+        NetworkAttachInterfaceFactory(bu_user) \
             .set(NetworkAttachInterfaceFactory.SERVER_CREATE, clients=user1) \
             .set(NetworkAttachInterfaceFactory.SERVER_WAIT, clients=user1) \
             .set(NetworkAttachInterfaceFactory.NETWORK_CREATE, clients=creator) \
@@ -539,11 +477,6 @@ class TestSample(BaseTestCase):
         )
 
         NetworkDetachInterfaceFactory(bu_user) \
-            .set(SnapFactory.IMAGE_CREATE,
-                 clients=creator,
-                 args=(self.image_file,),
-                 kwargs={'visibility': 'public'}) \
-            .set(NetworkDetachInterfaceFactory.IMAGE_WAIT, clients=creator) \
             .set(NetworkDetachInterfaceFactory.SERVER_CREATE, clients=user1) \
             .set(NetworkDetachInterfaceFactory.SERVER_WAIT, clients=user1) \
             .set(NetworkDetachInterfaceFactory.NETWORK_CREATE, clients=creator) \
