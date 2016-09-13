@@ -119,6 +119,7 @@ class KeystoneManager(object):
         :type project: string
         :param role: Keystone role. If left empty, will default to member
         :type role: string
+        :type inherited: bool
         :returns: clients.ClientManager
         """
 
@@ -183,6 +184,7 @@ class KeystoneManager(object):
         :type domain: keystoneclient.v3.domains.Domain
         :param project: The project object. *args must match domain ^ project
         :type project: keystoneclient.v3.projects.Project
+        :type inherited: bool for domain level inheritance
         :returns: [keystoneclient.v3.role_assignments.RoleAssignment]
         """
         ks = self.admin_client_manager.get_keystone()
@@ -193,6 +195,9 @@ class KeystoneManager(object):
 
         It's worth noting the specific args ordering we are building is:
         role, user, group, domain, project
+
+        If inherited = True, that means user will have inheritance accross
+        all projects within a given domain.
         """
         role_assignment = [role, user, None] #build-a-request
         role_possibilities = [domain, project] #unknown state
