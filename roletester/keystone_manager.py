@@ -108,7 +108,8 @@ class KeystoneManager(object):
     def find_user_credentials(self,
         domain='default',
         project='default',
-        role='_member_'):
+        role='_member_',
+        inherited=False):
         """
         Finds a user that matches your auth needs, creating one if necessary.
 
@@ -146,7 +147,8 @@ class KeystoneManager(object):
                 role_resource,
                 user_resource,
                 domain_resource,
-                project_resource
+                project_resource,
+                inherited
             )
             """
             Finally build or fetch the user's client manager.
@@ -168,7 +170,8 @@ class KeystoneManager(object):
         role=None,
         user=None,
         domain=None,
-        project=None):
+        project=None,
+        inherited=False):
         """
         Make role assignments from a list of keystone resources
 
@@ -196,13 +199,13 @@ class KeystoneManager(object):
         role_assignments = [] # Final list of required assignments
         if None in role_possibilities:
             # if [0,0], [0,1], or [1,0]
-            role_assignments = [role_assignment + role_possibilities]
+            role_assignments = [role_assignment + role_possibilities + inherited]
         else:
             # [1,1]
             role_assignments = [
                 role_assignment
                 + [role_possibilities[0]]
-                + [None],
+                + [None] + [inherited],
                 role_assignment
                 + [None]
                 + [role_possibilities[1]]
