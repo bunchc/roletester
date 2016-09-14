@@ -109,7 +109,7 @@ class KeystoneManager(object):
         domain='default',
         project='default',
         role='_member_',
-        inherited=False):
+        inherited=True):
         """
         Finds a user that matches your auth needs, creating one if necessary.
 
@@ -172,7 +172,7 @@ class KeystoneManager(object):
         user=None,
         domain=None,
         project=None,
-        inherited=False):
+        inherited=True):
         """
         Make role assignments from a list of keystone resources
 
