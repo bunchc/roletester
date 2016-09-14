@@ -108,7 +108,8 @@ class KeystoneManager(object):
     def find_user_credentials(self,
         domain='default',
         project='default',
-        role='_member_'):
+        role='_member_',
+        inherited=False):
         """
         Finds a user that matches your auth needs, creating one if necessary.
 
@@ -118,6 +119,7 @@ class KeystoneManager(object):
         :type project: string
         :param role: Keystone role. If left empty, will default to member
         :type role: string
+        :type inherited: bool
         :returns: clients.ClientManager
         """
 
@@ -146,7 +148,8 @@ class KeystoneManager(object):
                 role_resource,
                 user_resource,
                 domain_resource,
-                project_resource
+                project_resource,
+                inherited
             )
             """
             Finally build or fetch the user's client manager.
@@ -168,7 +171,8 @@ class KeystoneManager(object):
         role=None,
         user=None,
         domain=None,
-        project=None):
+        project=None,
+        inherited=False):
         """
         Make role assignments from a list of keystone resources
 
@@ -180,6 +184,7 @@ class KeystoneManager(object):
         :type domain: keystoneclient.v3.domains.Domain
         :param project: The project object. *args must match domain ^ project
         :type project: keystoneclient.v3.projects.Project
+        :type inherited: bool for domain level inheritance
         :returns: [keystoneclient.v3.role_assignments.RoleAssignment]
         """
         ks = self.admin_client_manager.get_keystone()
@@ -190,19 +195,22 @@ class KeystoneManager(object):
 
         It's worth noting the specific args ordering we are building is:
         role, user, group, domain, project
+
+        If inherited = True, that means user will have inheritance accross
+        all projects within a given domain.
         """
         role_assignment = [role, user, None] #build-a-request
         role_possibilities = [domain, project] #unknown state
         role_assignments = [] # Final list of required assignments
         if None in role_possibilities:
             # if [0,0], [0,1], or [1,0]
-            role_assignments = [role_assignment + role_possibilities]
+            role_assignments = [role_assignment + role_possibilities + inherited]
         else:
             # [1,1]
             role_assignments = [
                 role_assignment
                 + [role_possibilities[0]]
-                + [None],
+                + [None] + [inherited],
                 role_assignment
                 + [None]
                 + [role_possibilities[1]]

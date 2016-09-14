@@ -1,4 +1,5 @@
 from cinderclient.exceptions import NotFound as CinderNotFound
+from cinderclient.exceptions import Forbidden as CinderForbidden
 from glanceclient.exc import HTTPNotFound as GlanceNotFound
 from glanceclient.exc import Unauthorized as GlanceUnauthorized
 from keystoneauth1.exceptions.http import Unauthorized as KeystoneUnauthorized
@@ -10,6 +11,7 @@ from swiftclient.client import ClientException as SwiftClientException
 
 __all__ = [
     'CinderNotFound',
+    'CinderForbidden',
     'GlanceNotFound',
     'GlanceUnauthorized',
     'NeutronNotFound',
