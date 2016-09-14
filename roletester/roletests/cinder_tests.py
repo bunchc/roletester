@@ -168,7 +168,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_admin_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(cloud_admin) \
@@ -183,10 +183,10 @@ class TestSample(BaseTestCase):
 
     def test_cloud_admin_same_domain_different_user(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(cloud_admin) \
@@ -253,7 +253,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_volume_create_image(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
@@ -274,7 +274,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_volume_attach(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
@@ -303,7 +303,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_volume_detach(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
@@ -334,7 +334,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_volume_delete(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
@@ -352,7 +352,7 @@ class TestSample(BaseTestCase):
 ## bu-user can read everything within own domain
     def test_bu_user_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
@@ -377,7 +377,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_user_all_not_allowed(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
@@ -402,7 +402,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_user_create(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
@@ -414,7 +414,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_user_update(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
@@ -426,7 +426,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_user_image_create(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
@@ -440,7 +440,7 @@ class TestSample(BaseTestCase):
 #cirt user can read ALL domains
     def test_cirt_user_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
@@ -465,7 +465,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_all_not_allowed(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
@@ -490,7 +490,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_create(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
@@ -502,7 +502,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_update(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
@@ -514,7 +514,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_image_create(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
@@ -528,10 +528,10 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_all_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
-            'Domain2', self.project, 'cloud-admin'
+            'Domain2', self.project, 'cloud-admin', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_user) \
@@ -553,7 +553,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_all_not_allowed_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Domain2', self.project, 'cirt'
@@ -578,7 +578,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_create_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Domain2', self.project, 'cirt'
@@ -590,7 +590,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_update_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Domain2', self.project, 'cirt'
@@ -602,7 +602,7 @@ class TestSample(BaseTestCase):
 
     def test_cirt_user_image_create_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Domain2', self.project, 'cirt'
@@ -614,10 +614,11 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
 
 # bu-poweruser (Domains: Cannot Acccess Anything @ Domain Level) (Projects: Can Only Access Within Specified Projects)
+# Set inheritance to FALSE!!!
 
     def test_bu_poweruser_all(self):
         bu_poweruser = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-poweruser'
+            'Domain2', self.project, 'bu-poweruser', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_poweruser) \
@@ -635,7 +636,7 @@ class TestSample(BaseTestCase):
             'Default', 'torst', 'bu-admin'
         )
         bu_poweruser = self.km.find_user_credentials(
-            'Default', 'torst', 'bu-poweruser'
+            'Default', 'torst', 'bu-poweruser', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_poweruser) \
@@ -661,10 +662,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_poweruser_different_domain_different_user_volume_create_image(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-admin'
+            'Domain2', self.project, 'bu-poweruser', False
         )
         VolumeImageFactory(bu_admin) \
             .set(VolumeImageFactory.VOLUME_CREATE,
@@ -682,10 +683,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_poweruser_different_domain_different_user_volume_attach(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-admin'
+            'Domain2', self.project, 'bu-poweruser', False
         )
 
         VolumeAttachFactory(bu_admin) \
@@ -711,10 +712,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_poweruser_different_domain_different_user_volume_detach(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-admin'
+            'Domain2', self.project, 'bu-poweruser', False
         )
 
         VolumeDetachFactory(bu_admin) \
@@ -742,10 +743,10 @@ class TestSample(BaseTestCase):
 
     def test_bu_poweruser_different_domain_different_user_volume_delete(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-admin'
+            'Domain2', self.project, 'bu-poweruser', False
         )
         VolumeDeleteFactory(bu_admin) \
             .set(VolumeDeleteFactory.VOLUME_CREATE,
@@ -761,7 +762,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_support_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         cloud_support = self.km.find_user_credentials(
             'Default', self.project, 'cloud-support'
@@ -783,7 +784,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_support_not_allowed_delete_image(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         cloud_support = self.km.find_user_credentials(
             'Default', self.project, 'cloud-support'
@@ -806,7 +807,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_support_not_allowed_delete(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         cloud_support = self.km.find_user_credentials(
             'Default', self.project, 'cloud-support'
@@ -828,7 +829,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_support_create(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         cloud_support = self.km.find_user_credentials(
             'Default', self.project, 'cloud-support'
@@ -840,7 +841,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_support_image_create(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         cloud_support = self.km.find_user_credentials(
             'Default', self.project, 'cloud-support'
@@ -852,7 +853,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_support_all_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         cloud_support = self.km.find_user_credentials(
             'Domain2', self.project, 'cloud-support'
@@ -877,7 +878,7 @@ class TestSample(BaseTestCase):
 ## bu-brt can read everything within own domain
     def test_bu_brt_all(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-brt'
@@ -902,7 +903,7 @@ class TestSample(BaseTestCase):
 #todo: retest after requirements are updated
     def test_bu_brt_all_not_allowed(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-brt'
@@ -926,7 +927,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_brt_create(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
+            'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-brt'
@@ -938,14 +939,14 @@ class TestSample(BaseTestCase):
 
     def test_bu_brt_diff_project(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', 'torst', 'cloud-admin'
+            'Default', 'torst', 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
-            'Default', 'torst', 'bu-brt', True
+            'Default', 'torst', 'bu-brt'
         )
 
         bu_user_2 = self.km.find_user_credentials(
-            'Default', self.project, 'bu-brt', True
+            'Default', self.project, 'bu-brt'
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_user) \
@@ -961,6 +962,66 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.VOLUME_ATTACH, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DETACH, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_DELETE_IMAGE,
+             kwargs=volume_image_kwargs, clients=cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_diff_project_attach_detach(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', 'torst', 'cloud-admin', False
+        )
+        bu_user = self.km.find_user_credentials(
+            'Default', 'torst', 'bu-brt'
+        )
+
+        bu_user_2 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+        volume_image_kwargs = {'image_key': 'volume_image_id'}
+        SampleFactory(bu_user) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_IMAGE_WAIT,
+                 kwargs=volume_image_kwargs) \
+            .set(SampleFactory.VOLUME_SHOW, clients=bu_user_2) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user_2) \
+            .set(SampleFactory.IMAGE_CREATE,
+                 args=(self.image_file,), clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_ATTACH, clients=bu_user_2) \
+            .set(SampleFactory.VOLUME_DETACH, clients=bu_user_2) \
+            .set(SampleFactory.VOLUME_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_DELETE_IMAGE,
+             kwargs=volume_image_kwargs, clients=cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_diff_project_delete(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', 'torst', 'cloud-admin', False
+        )
+        bu_user = self.km.find_user_credentials(
+            'Default', 'torst', 'bu-brt'
+        )
+
+        bu_user_2 = self.km.find_user_credentials(
+            'Default', 'torst', 'bu-brt'
+        )
+        volume_image_kwargs = {'image_key': 'volume_image_id'}
+        SampleFactory(bu_user) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_IMAGE_WAIT,
+                 kwargs=volume_image_kwargs) \
+            .set(SampleFactory.VOLUME_SHOW, clients=bu_user_2) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user_2) \
+            .set(SampleFactory.IMAGE_CREATE,
+                 args=(self.image_file,), clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_ATTACH, clients=bu_user_2) \
+            .set(SampleFactory.VOLUME_DETACH, clients=bu_user_2) \
+            .set(SampleFactory.VOLUME_DELETE, clients=bu_user_2, expected_exceptions=[CinderForbidden]) \
             .set(SampleFactory.VOLUME_DELETE_IMAGE,
              kwargs=volume_image_kwargs, clients=cloud_admin) \
             .produce() \
