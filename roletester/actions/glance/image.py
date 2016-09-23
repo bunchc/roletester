@@ -9,7 +9,7 @@ logger = logging.getLogger('roletester.actions.glance.image')
 def create(clients,
            context,
            image_file,
-           visibility='private',
+           visibility='public',
            name="glance test image",
            disk_format='qcow2',
            container_format='bare'):

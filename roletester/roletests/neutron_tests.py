@@ -380,7 +380,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'admin'
         )
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
@@ -469,7 +469,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'admin'
         )
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
@@ -504,7 +504,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'admin'
         )
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'bu-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
