@@ -31,7 +31,9 @@ from roletester.actions.neutron import floatingip_disassociate
 from roletester.actions.neutron import floatingip_show
 from roletester.actions.neutron import port_create
 from roletester.exc import KeystoneUnauthorized
+from roletester.exc import NeutronForbidden
 from neutronclient.common.exceptions import NetworkNotFoundClient
+from roletester.exc import NeutronNotFound
 from roletester.scenario import ScenarioFactory as Factory
 from roletester.utils import randomname
 
@@ -174,6 +176,15 @@ class RouterUpdateFactory(Factory):
     ROUTER_UPDATE = 1
 
 
+class RouterCreateFactory(Factory):
+
+    _ACTIONS = [
+        router_create
+    ]
+
+    ROUTER_CREATE = 0
+
+
 class SubnetDeleteFactory(Factory):
 
     _ACTIONS = [
@@ -209,6 +220,26 @@ class NetworkDeleteFactory(Factory):
 
     NETWORK_CREATE = 0
     NETWORK_DELETE = 1
+
+
+class NetworkCreateFactory(Factory):
+
+    _ACTIONS = [
+        network_create,
+    ]
+
+    NETWORK_CREATE = 0
+
+
+class SubnetCreateFactory(Factory):
+
+    _ACTIONS = [
+        network_create,
+        subnet_create
+    ]
+
+    NETWORK_CREATE = 0
+    SUBNET_CREATE = 1
 
 
 class FloatingIPFactory(Factory):
@@ -306,7 +337,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'admin'
         )
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin'
         )
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
@@ -336,7 +367,7 @@ class TestSample(BaseTestCase):
 
     def test_cloud_admin_same_domain_different_user_floatingip(self):
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin'
         )
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
@@ -362,25 +393,45 @@ class TestSample(BaseTestCase):
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
         )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
 
         SampleFactory(bu_admin) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_REMOVE_INTERFACE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.NETWORK_DELETE, clients=cloud_admin) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_floatingip(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
         )
         FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_same_domain_different_user(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
@@ -410,7 +461,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_same_domain_different_user_floatingip(self):
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
@@ -434,7 +485,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_floatingip(self):
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
@@ -466,7 +517,7 @@ class TestSample(BaseTestCase):
 
     def test_bu_admin_different_domain_different_user_secgroup_add_to_server(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
@@ -479,11 +530,11 @@ class TestSample(BaseTestCase):
             .set(SecgroupAddFactory.NETWORK_CREATE,
                  clients=user1) \
             .set(SecgroupAddFactory.NETWORK_SHOW,
-                 expected_exceptions = [KeystoneUnauthorized]) \
+                 expected_exceptions = [NeutronForbidden]) \
             .set(SecgroupAddFactory.SUBNET_CREATE,
                  clients=user1) \
             .set(SecgroupAddFactory.SUBNET_SHOW,
-                 expected_exceptions = [KeystoneUnauthorized]) \
+                 expected_exceptions = [NeutronForbidden]) \
             .set(SecgroupAddFactory.SERVER_CREATE,
                  clients=user1) \
             .set(SecgroupAddFactory.SERVER_WAIT,
@@ -491,20 +542,20 @@ class TestSample(BaseTestCase):
             .set(SecgroupAddFactory.SECURITY_GROUP_CREATE,
                  clients=user1) \
             .set(SecgroupAddFactory.SECURITY_GROUP_SHOW,
-                 expected_exceptions = [KeystoneUnauthorized]) \
+                 expected_exceptions = [NeutronForbidden]) \
             .set(SecgroupAddFactory.SECURITY_GROUP_RULE_CREATE,
                  clients=user1) \
             .set(SecgroupAddFactory.SECURITY_GROUP_ADD_TO_SERVER,
-                 expected_exceptions = [KeystoneUnauthorized]) \
+                 expected_exceptions = [NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_different_domain_different_user_add_interface_to_server(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'admin'
+            'Default', self.project, 'cloud-admin'
         )
         user1 = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
@@ -542,52 +593,30 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
-    def test_bu_admin_different_domain_different_user_router_delete(self):
-        user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
-        )
-        bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-admin'
-        )
-
-        RouterDeleteFactory(bu_admin) \
-            .set(RouterDeleteFactory.ROUTER_CREATE,
-                 clients=user1) \
-            .set(RouterDeleteFactory.ROUTER_DELETE,
-                 expected_exceptions=[KeystoneUnauthorized]) \
-            .produce() \
-            .run(context=self.context)
-
     def test_bu_admin_different_domain_different_user_subnet_delete(self):
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
         )
 
-        SubnetDeleteFactory(bu_admin) \
-            .set(SubnetDeleteFactory.NETWORK_CREATE,
-                 clients=user1) \
-            .set(SubnetDeleteFactory.SUBNET_CREATE,
-                 clients=user1) \
-            .set(SubnetDeleteFactory.SUBNET_DELETE,
+        SubnetDeleteFactory(user1) \
+            .set(SubnetDeleteFactory.SUBNET_DELETE, clients=bu_admin,
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_different_domain_different_user_network_delete(self):
         user1 = self.km.find_user_credentials(
-            'Default', self.project, '_member_'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Domain2', self.project, 'bu-admin'
         )
 
-        NetworkDeleteFactory(bu_admin) \
-            .set(NetworkDeleteFactory.NETWORK_CREATE,
-                 clients=user1) \
-            .set(NetworkDeleteFactory.NETWORK_DELETE,
+        NetworkDeleteFactory(user1) \
+            .set(NetworkDeleteFactory.NETWORK_DELETE, clients=bu_admin,
                  expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
@@ -601,12 +630,16 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
+#todo: retest
     def test_bu_admin_subnet_update(self):
-
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
         )
-        SubnetUpdateFactory(bu_admin) \
+        SubnetUpdateFactory(cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, clients=bu_admin, expected_exceptions=[KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
 
@@ -620,17 +653,21 @@ class TestSample(BaseTestCase):
             .run(context=self.context)
 
     def test_bu_admin_router_update(self):
-
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
         )
-        RouterUpdateFactory(bu_admin) \
+        RouterUpdateFactory(cloud_admin) \
+            .set(RouterUpdateFactory.ROUTER_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
 # bu-user
 #get subnet, get subnet pool
 #get network details
+    #todo: retest
     def test_bu_user(self):
 
         user1 = self.km.find_user_credentials(
@@ -642,18 +679,18 @@ class TestSample(BaseTestCase):
 
         SampleFactory(cloud_admin) \
             .set(SampleFactory.NETWORK_CREATE) \
-            .set(SampleFactory.NETWORK_SHOW, clients=user1) \
+            .set(SampleFactory.NETWORK_SHOW, clients=user1, expected_exceptions=[NeutronNotFound]) \
             .set(SampleFactory.SUBNET_CREATE) \
             .set(SampleFactory.SUBNET_SHOW, clients=user1) \
             .set(SampleFactory.SERVER_CREATE) \
             .set(SampleFactory.SERVER_WAIT,
                  clients=user1) \
             .set(SampleFactory.SECURITY_GROUP_CREATE) \
-            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=user1, expected_exceptions=[NeutronNotFound]) \
             .set(SampleFactory.SECURITY_GROUP_RULE_CREATE) \
             .set(SampleFactory.SERVER_DELETE) \
             .set(SampleFactory.ROUTER_CREATE) \
-            .set(SampleFactory.ROUTER_SHOW, clients=user1) \
+            .set(SampleFactory.ROUTER_SHOW, clients=user1, expected_exceptions=[NeutronNotFound]) \
             .set(SampleFactory.ROUTER_ADD_INTERFACE) \
             .produce() \
             .run(context=self.context)
@@ -664,8 +701,8 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'bu-user'
         )
 
-        SampleFactory(user1) \
-            .set(SampleFactory.NETWORK_CREATE, expected_exceptions=[KeystoneUnauthorized]) \
+        NetworkCreateFactory(user1) \
+            .set(NetworkCreateFactory.NETWORK_CREATE, expected_exceptions=[NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -678,9 +715,9 @@ class TestSample(BaseTestCase):
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
         )
-        SampleFactory(user1) \
-            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.SUBNET_CREATE, expected_exceptions=[KeystoneUnauthorized]) \
+        SubnetCreateFactory(user1) \
+            .set(SubnetCreateFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SubnetCreateFactory.SUBNET_CREATE, expected_exceptions=[NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -689,15 +726,8 @@ class TestSample(BaseTestCase):
         user1 = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
         )
-
-        cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin'
-        )
-        SampleFactory(user1) \
-            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.NETWORK_SHOW) \
-            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.ROUTER_CREATE, expected_exceptions=[KeystoneUnauthorized]) \
+        RouterCreateFactory(user1) \
+            .set(RouterCreateFactory.ROUTER_CREATE, expected_exceptions=[NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -709,9 +739,8 @@ class TestSample(BaseTestCase):
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
         )
-        SampleFactory(user1) \
-            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.NETWORK_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+        NetworkDeleteFactory(cloud_admin) \
+            .set(NetworkDeleteFactory.NETWORK_DELETE, clients=user1, expected_exceptions=[NeutronNotFound]) \
             .produce() \
             .run(context=self.context)
 
@@ -724,10 +753,8 @@ class TestSample(BaseTestCase):
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
         )
-        SampleFactory(user1) \
-            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.SUBNET_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+        SubnetDeleteFactory(cloud_admin) \
+            .set(SubnetDeleteFactory.SUBNET_DELETE, clients=user1, expected_exceptions=[NeutronNotFound]) \
             .produce() \
             .run(context=self.context)
 
@@ -740,10 +767,8 @@ class TestSample(BaseTestCase):
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin'
         )
-        SampleFactory(user1) \
-            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
-            .set(SampleFactory.SUBNET_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+        RouterDeleteFactory(cloud_admin) \
+            .set(RouterDeleteFactory.ROUTER_DELETE, clients=user1, expected_exceptions=[NeutronNotFound]) \
             .produce() \
             .run(context=self.context)
 
@@ -759,7 +784,7 @@ class TestSample(BaseTestCase):
         SubnetUpdateFactory(user1) \
             .set(SubnetUpdateFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SubnetUpdateFactory.SUBNET_CREATE, clients=cloud_admin) \
-            .set(SubnetUpdateFactory.SUBNET_UPDATE, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, expected_exceptions=[NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -774,7 +799,7 @@ class TestSample(BaseTestCase):
         )
         RouterUpdateFactory(user1) \
             .set(RouterUpdateFactory.ROUTER_CREATE, clients=cloud_admin) \
-            .set(RouterUpdateFactory.ROUTER_UPDATE, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(RouterUpdateFactory.ROUTER_UPDATE, expected_exceptions=[NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -782,44 +807,33 @@ class TestSample(BaseTestCase):
         user1 = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
         )
-        bu_admin = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
         )
 
-        FloatingIPFactory(bu_admin) \
-            .set(FloatingIPFactory.NETWORK_CREATE)\
-            .set(FloatingIPFactory.SUBNET_CREATE)\
-            .set(FloatingIPFactory.PORT_CREATE)\
-            .set(FloatingIPFactory.ROUTER_CREATE)\
-            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE)\
-            .set(FloatingIPFactory.FLOATINGIP_CREATE)\
+        FloatingIPFactory(cloud_admin) \
             .set(FloatingIPFactory.FLOATINGIP_SHOW,
                  clients=user1) \
             .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
-                 clients=user1) \
+                 clients=user1, expected_exceptions=[NeutronForbidden]) \
             .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
-                 clients=user1) \
+                 clients=user1, expected_exceptions=[NeutronForbidden]) \
             .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1,
-                 expected_exceptions=[KeystoneUnauthorized]) \
+                 expected_exceptions=[NeutronNotFound]) \
             .produce() \
             .run(context=self.context)
 
     #todo: re-test, seems broken
     def test_bu_user_get_floatingip_diff_domain(self):
-        user1 = self.km.find_user_credentials(
-            'Default', self.project, 'bu-user'
-        )
-        bu_admin = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-admin'
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
         )
 
-        FloatingIPFactory(bu_admin) \
-            .set(FloatingIPFactory.NETWORK_CREATE)\
-            .set(FloatingIPFactory.SUBNET_CREATE)\
-            .set(FloatingIPFactory.PORT_CREATE)\
-            .set(FloatingIPFactory.ROUTER_CREATE)\
-            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE)\
-            .set(FloatingIPFactory.FLOATINGIP_CREATE) \
+        user1 = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-user'
+        )
+
+        FloatingIPFactory(cloud_admin) \
             .set(FloatingIPFactory.FLOATINGIP_SHOW,
                  clients=user1, expected_exceptions=[KeystoneUnauthorized]) \
             .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,

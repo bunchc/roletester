@@ -9,6 +9,7 @@ from keystoneauth1.exceptions.http import NotFound as KeystoneNotFound
 from neutronclient.common.exceptions import NotFound as NeutronNotFound
 from novaclient.exceptions import NotFound as NovaNotFound
 from swiftclient.client import ClientException as SwiftClientException
+from neutronclient.common.exceptions import Forbidden as NeutronForbidden
 
 __all__ = [
     'CinderNotFound',
@@ -16,6 +17,7 @@ __all__ = [
     'GlanceNotFound',
     'GlanceUnauthorized',
     'GlanceForbidden',
+    'NeutronForbidden',
     'NeutronNotFound',
     'KeystoneNotFound',
     'KeystoneUnauthorized',
