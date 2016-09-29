@@ -8,6 +8,7 @@ from keystoneauth1.exceptions.http import Forbidden as KeystoneForbidden
 from keystoneauth1.exceptions.http import NotFound as KeystoneNotFound
 from neutronclient.common.exceptions import NotFound as NeutronNotFound
 from novaclient.exceptions import NotFound as NovaNotFound
+from novaclient.exceptions import Forbidden as NovaForbidden
 from swiftclient.client import ClientException as SwiftClientException
 from neutronclient.common.exceptions import Forbidden as NeutronForbidden
 
