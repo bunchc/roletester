@@ -15,6 +15,7 @@ from roletester.actions.nova import server_wait_for_status
 # from roletester.exc import CinderUnauthorized
 from roletester.exc import KeystoneUnauthorized
 from roletester.exc import CinderForbidden
+from roletester.exc import GlanceForbidden
 from roletester.scenario import ScenarioFactory as Factory
 from roletester.utils import randomname
 from roletester.actions.neutron import network_create
@@ -151,10 +152,18 @@ class VolumeDeleteFactory(Factory):
 class VolumeCreateFactory(Factory):
 
     _ACTIONS = [
-        volume_create,
+        volume_create
     ]
 
     VOLUME_CREATE = 0
+
+class VolumeCreateImageFactory(Factory):
+
+    _ACTIONS = [
+        image_create
+    ]
+
+    VOLUME_IMAGE_CREATE = 0
 
 
 class TestSample(BaseTestCase):
@@ -213,20 +222,27 @@ class TestSample(BaseTestCase):
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
         )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin', False
+        )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_admin) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
-            .set(SampleFactory.IMAGE_CREATE,
+            .set(SampleFactory.IMAGE_CREATE, clients=cloud_admin,
                  args=(self.image_file,)) \
-            .set(SampleFactory.VOLUME_DELETE_IMAGE,
+            .set(SampleFactory.IMAGE_WAIT) \
+            .set(SampleFactory.VOLUME_DELETE_IMAGE, clients=cloud_admin,
                  kwargs=volume_image_kwargs) \
+            .set(SampleFactory.VOLUME_DELETE) \
             .produce() \
             .run(context=self.context)
 
     def test_bu_admin_same_domain_different_user(self):
         creator = self.km.find_user_credentials(
-            'Default', self.project, 'bu-admin'
+            'Default', self.project, 'cloud-admin'
         )
         bu_admin = self.km.find_user_credentials(
             'Default', self.project, 'bu-admin'
@@ -237,6 +253,8 @@ class TestSample(BaseTestCase):
                  clients=creator) \
             .set(SampleFactory.VOLUME_WAIT,
                  clients=creator) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=creator) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=creator) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -247,7 +265,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SERVER_WAIT,
                  clients=creator) \
             .set(SampleFactory.VOLUME_DELETE_IMAGE,
-                 kwargs=volume_image_kwargs) \
+                 kwargs=volume_image_kwargs, clients=creator) \
             .produce() \
             .run(context=self.context)
 
@@ -363,6 +381,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -388,15 +407,14 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,), clients=cloud_admin) \
-            .set(SampleFactory.VOLUME_ATTACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DETACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DELETE_IMAGE,
-             kwargs=volume_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.VOLUME_ATTACH, expected_exceptions=[CinderForbidden]) \
+            .set(SampleFactory.VOLUME_DETACH, expected_exceptions=[CinderForbidden]) \
+            .set(SampleFactory.VOLUME_DELETE, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -407,8 +425,8 @@ class TestSample(BaseTestCase):
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
         )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.VOLUME_CREATE, clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
+        VolumeCreateFactory(cloud_admin) \
+            .set(VolumeCreateFactory.VOLUME_CREATE, clients=bu_user, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -419,8 +437,14 @@ class TestSample(BaseTestCase):
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
         )
+        volume_image_kwargs = {'image_key': 'volume_image_id'}
+
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user, expected_exceptions=[CinderForbidden]) \
+            .set(SampleFactory.VOLUME_IMAGE_WAIT,
+                 kwargs=volume_image_kwargs) \
+            .set(SampleFactory.IMAGE_CREATE,
+                 args=(self.image_file,)) \
             .produce() \
             .run(context=self.context)
 
@@ -431,9 +455,9 @@ class TestSample(BaseTestCase):
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'bu-user'
         )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, args=(self.image_file),
-                 clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
+        VolumeCreateImageFactory(cloud_admin) \
+            .set(VolumeCreateImageFactory.VOLUME_IMAGE_CREATE, args=(self.image_file,),
+                 clients=bu_user, expected_exceptions=[GlanceForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -451,6 +475,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -476,15 +501,16 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,), clients=cloud_admin) \
-            .set(SampleFactory.VOLUME_ATTACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DETACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.VOLUME_ATTACH, expected_exceptions=[CinderForbidden]) \
+            .set(SampleFactory.VOLUME_DETACH, expected_exceptions=[CinderForbidden]) \
+            .set(SampleFactory.VOLUME_DELETE, expected_exceptions=[CinderForbidden]) \
             .set(SampleFactory.VOLUME_DELETE_IMAGE,
-             kwargs=volume_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
+             kwargs=volume_image_kwargs, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -495,8 +521,8 @@ class TestSample(BaseTestCase):
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
         )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.VOLUME_CREATE, clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
+        VolumeCreateFactory(cloud_admin) \
+            .set(VolumeCreateFactory.VOLUME_CREATE, clients=bu_user, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -507,8 +533,16 @@ class TestSample(BaseTestCase):
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
         )
+        volume_image_kwargs = {'image_key': 'volume_image_id'}
+
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user, expected_exceptions=[CinderForbidden]) \
+            .set(SampleFactory.VOLUME_IMAGE_WAIT,
+                kwargs=volume_image_kwargs) \
+            .set(SampleFactory.IMAGE_CREATE,
+                 args=(self.image_file,)) \
+            .set(SampleFactory.VOLUME_DELETE_IMAGE,
+                kwargs=volume_image_kwargs) \
             .produce() \
             .run(context=self.context)
 
@@ -519,10 +553,9 @@ class TestSample(BaseTestCase):
         bu_user = self.km.find_user_credentials(
             'Default', self.project, 'cirt'
         )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, args=(self.image_file),
-                 clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.IMAGE_WAIT, clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
+        VolumeCreateImageFactory(cloud_admin) \
+            .set(VolumeCreateImageFactory.IMAGE_CREATE, args=(self.image_file),
+                 clients=bu_user, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -531,7 +564,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
-            'Domain2', self.project, 'cloud-admin', False
+            'Default', self.project, 'cirt', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_user) \
@@ -539,6 +572,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -556,7 +590,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
-            'Domain2', self.project, 'cirt'
+            'Default', self.project, 'cirt', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_user) \
@@ -564,15 +598,16 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,), clients=cloud_admin) \
-            .set(SampleFactory.VOLUME_ATTACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DETACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.VOLUME_ATTACH, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_DETACH, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_DELETE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DELETE_IMAGE,
-             kwargs=volume_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
+             kwargs=volume_image_kwargs, clients=cloud_admin) \
             .produce() \
             .run(context=self.context)
 
@@ -581,47 +616,23 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
-            'Domain2', self.project, 'cirt'
+            'Default', self.project, 'cirt'
         )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.VOLUME_CREATE, clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
+        VolumeCreateFactory(cloud_admin) \
+            .set(VolumeCreateFactory.VOLUME_CREATE, clients=bu_user, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
     def test_cirt_user_update_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin', False
+            'Domain2', self.project, 'cloud-admin', False
         )
         bu_user = self.km.find_user_credentials(
             'Domain2', self.project, 'cirt'
-        )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
-            .produce() \
-            .run(context=self.context)
-
-    def test_cirt_user_image_create_diff_domain(self):
-        cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin', False
-        )
-        bu_user = self.km.find_user_credentials(
-            'Domain2', self.project, 'cirt'
-        )
-        SampleFactory(cloud_admin) \
-            .set(SampleFactory.IMAGE_CREATE, args=(self.image_file),
-                 clients=bu_user, expected_exceptions=[KeystoneUnauthorized]) \
-            .produce() \
-            .run(context=self.context)
-
-# bu-poweruser (Domains: Cannot Acccess Anything @ Domain Level) (Projects: Can Only Access Within Specified Projects)
-# Set inheritance to FALSE!!!
-
-    def test_bu_poweruser_all(self):
-        bu_poweruser = self.km.find_user_credentials(
-            'Domain2', self.project, 'bu-poweruser', False
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
-        SampleFactory(bu_poweruser) \
+        SampleFactory(cloud_admin) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=bu_user, expected_exceptions=[CinderForbidden]) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -631,9 +642,46 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
+    def test_cirt_user_image_create_diff_domain(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin', False
+        )
+        bu_user = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+        VolumeCreateImageFactory(cloud_admin) \
+            .set(VolumeCreateImageFactory.VOLUME_IMAGE_CREATE, args=(self.image_file,),
+                 clients=bu_user, expected_exceptions=[GlanceForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+# bu-poweruser (Domains: Cannot Acccess Anything @ Domain Level) (Projects: Can Only Access Within Specified Projects)
+# Set inheritance to FALSE!!!
+
+    def test_bu_poweruser_all(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin', False
+        )
+        bu_poweruser = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+        volume_image_kwargs = {'image_key': 'volume_image_id'}
+        SampleFactory(bu_poweruser) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_IMAGE_WAIT,
+                 kwargs=volume_image_kwargs) \
+            .set(SampleFactory.IMAGE_CREATE,
+                 args=(self.image_file,), clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_DELETE_IMAGE,
+                 kwargs=volume_image_kwargs, clients=cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
     def test_bu_poweruser_same_domain_different_user(self):
         creator = self.km.find_user_credentials(
-            'Default', 'torst', 'bu-admin'
+            'Default', 'torst', 'cloud-admin'
         )
         bu_poweruser = self.km.find_user_credentials(
             'Default', 'torst', 'bu-poweruser', False
@@ -646,6 +694,7 @@ class TestSample(BaseTestCase):
                  clients=creator) \
             .set(SampleFactory.VOLUME_WAIT,
                  clients=creator) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=creator) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -656,7 +705,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SERVER_WAIT,
                  clients=creator) \
             .set(SampleFactory.VOLUME_DELETE_IMAGE,
-                 kwargs=volume_image_kwargs) \
+                 kwargs=volume_image_kwargs, clients=creator) \
             .produce() \
             .run(context=self.context)
 
@@ -772,17 +821,18 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
-                 args=(self.image_file,)) \
+                 args=(self.image_file,), clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DELETE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DELETE_IMAGE,
              kwargs=volume_image_kwargs) \
             .produce() \
             .run(context=self.context)
 
-    def test_cloud_support_not_allowed_delete_image(self):
+    def test_cloud_support_delete_image(self):
         cloud_admin = self.km.find_user_credentials(
             'Default', self.project, 'cloud-admin', False
         )
@@ -795,13 +845,14 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,), clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DELETE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DELETE_IMAGE,
-             kwargs=volume_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
+             kwargs=volume_image_kwargs) \
             .produce() \
             .run(context=self.context)
 
@@ -817,6 +868,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -847,13 +899,13 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'cloud-support'
         )
         VolumeImageFactory(cloud_admin) \
-            .set(VolumeImageFactory.VOLUME_CREATE_IMAGE, clients=cloud_support, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(VolumeImageFactory.VOLUME_CREATE_IMAGE, clients=cloud_support, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
     def test_cloud_support_all_diff_domain(self):
         cloud_admin = self.km.find_user_credentials(
-            'Default', self.project, 'cloud-admin', False
+            'Domain2', self.project, 'cloud-admin', False
         )
         cloud_support = self.km.find_user_credentials(
             'Domain2', self.project, 'cloud-support'
@@ -864,6 +916,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
@@ -888,10 +941,12 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,), clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_ATTACH, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DETACH, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_DELETE, clients=cloud_admin) \
@@ -913,15 +968,15 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_UPDATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.IMAGE_CREATE,
                  args=(self.image_file,), clients=cloud_admin) \
-            .set(SampleFactory.VOLUME_ATTACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DETACH, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DELETE, expected_exceptions=[KeystoneUnauthorized]) \
-            .set(SampleFactory.VOLUME_DELETE_IMAGE,
-             kwargs=volume_image_kwargs, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_DELETE_IMAGE, kwargs=volume_image_kwargs,
+                 expected_exceptions=[GlanceForbidden])\
+            .set(SampleFactory.VOLUME_DELETE, expected_exceptions=[CinderForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -946,13 +1001,14 @@ class TestSample(BaseTestCase):
         )
 
         bu_user_2 = self.km.find_user_credentials(
-            'Default', self.project, 'bu-brt'
+            'Default', 'torst', 'bu-brt'
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_user) \
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.VOLUME_SHOW, clients=bu_user_2) \
@@ -976,13 +1032,14 @@ class TestSample(BaseTestCase):
         )
 
         bu_user_2 = self.km.find_user_credentials(
-            'Default', self.project, 'bu-brt'
+            'Default', 'torst', 'bu-brt'
         )
         volume_image_kwargs = {'image_key': 'volume_image_id'}
         SampleFactory(bu_user) \
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.VOLUME_SHOW, clients=bu_user_2) \
@@ -1013,6 +1070,7 @@ class TestSample(BaseTestCase):
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.VOLUME_CREATE_IMAGE, clients=cloud_admin) \
             .set(SampleFactory.VOLUME_IMAGE_WAIT,
                  kwargs=volume_image_kwargs) \
             .set(SampleFactory.VOLUME_SHOW, clients=bu_user_2) \
