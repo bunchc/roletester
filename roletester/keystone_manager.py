@@ -6,6 +6,7 @@ from Crypto import Random
 from Crypto.Random import random
 from clients import ClientManager
 from string import ascii_letters, digits
+from roletester.throttle_decorator import throttled
 
 
 
@@ -105,6 +106,7 @@ class KeystoneManager(object):
             iv = self.__crypto_info['iv']
         return (AES.new(key, AES.MODE_CFB, iv), iv)
 
+    @throttled
     def find_user_credentials(self,
         domain='default',
         project='default',

@@ -310,8 +310,10 @@ class TestSample(BaseTestCase):
                     logger.info("found image with image id: %s" %img.id)
                     self.context.update(image_id=img.id)
             if 'image_id' in self.context:
+                logger.info("image found:")
                 logger.info("image_id in context: %s" %self.context['image_id'])
             else:
+                logger.info("creating new image.")
                 image_create(self.km.admin_client_manager, self.context, self.image_file)
                 image_id = self.context['image_id']
 
@@ -399,14 +401,17 @@ class TestSample(BaseTestCase):
 
         SampleFactory(bu_admin) \
             .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.NETWORK_SHOW, clients=cloud_admin) \
             .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SECURITY_GROUP_CREATE, clients=cloud_admin) \
             .set(SampleFactory.SECURITY_GROUP_RULE_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_DELETE, clients=cloud_admin) \
             .set(SampleFactory.SECURITY_GROUP_DELETE, clients=cloud_admin) \
             .set(SampleFactory.ROUTER_CREATE, clients=cloud_admin) \
             .set(SampleFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
             .set(SampleFactory.ROUTER_REMOVE_INTERFACE, clients=cloud_admin) \
             .set(SampleFactory.ROUTER_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_DELETE, clients=cloud_admin) \
             .set(SampleFactory.NETWORK_DELETE, clients=cloud_admin) \
             .produce() \
             .run(context=self.context)
@@ -423,6 +428,7 @@ class TestSample(BaseTestCase):
             .set(FloatingIPFactory.SUBNET_CREATE, clients=cloud_admin) \
             .set(FloatingIPFactory.ROUTER_CREATE, clients=cloud_admin) \
             .set(FloatingIPFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=cloud_admin) \
             .produce() \
             .run(context=self.context)
 
@@ -448,14 +454,20 @@ class TestSample(BaseTestCase):
                  clients=user1) \
             .set(SampleFactory.SECURITY_GROUP_CREATE,
                  clients=user1) \
-            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE,
-                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_DELETE, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_REMOVE_FROM_SERVER, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_DELETE, clients=user1) \
             .set(SampleFactory.SERVER_DELETE,
                  clients=user1) \
             .set(SampleFactory.ROUTER_CREATE,
                  clients=user1) \
             .set(SampleFactory.ROUTER_ADD_INTERFACE,
                  clients=user1) \
+            .set(SampleFactory.ROUTER_REMOVE_INTERFACE, clients=user1) \
+            .set(SampleFactory.ROUTER_DELETE, clients=user1) \
+            .set(SampleFactory.SUBNET_DELETE, clients=user1) \
+            .set(SampleFactory.NETWORK_DELETE, clients=user1) \
             .produce() \
             .run(context=self.context)
 
@@ -479,6 +491,8 @@ class TestSample(BaseTestCase):
             .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
                  clients=user1) \
             .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, \
                  clients=user1) \
             .produce() \
             .run(context=self.context)
@@ -528,25 +542,25 @@ class TestSample(BaseTestCase):
 
         SecgroupAddFactory(bu_admin) \
             .set(SecgroupAddFactory.NETWORK_CREATE,
-                 clients=user1) \
+                 clients=creator) \
             .set(SecgroupAddFactory.NETWORK_SHOW,
-                 expected_exceptions = [NeutronForbidden]) \
+                 expected_exceptions = [KeystoneUnauthorized]) \
             .set(SecgroupAddFactory.SUBNET_CREATE,
-                 clients=user1) \
+                 clients=creator) \
             .set(SecgroupAddFactory.SUBNET_SHOW,
-                 expected_exceptions = [NeutronForbidden]) \
+                 expected_exceptions = [KeystoneUnauthorized]) \
             .set(SecgroupAddFactory.SERVER_CREATE,
                  clients=user1) \
             .set(SecgroupAddFactory.SERVER_WAIT,
                  clients=user1) \
             .set(SecgroupAddFactory.SECURITY_GROUP_CREATE,
-                 clients=user1) \
+                 clients=creator) \
             .set(SecgroupAddFactory.SECURITY_GROUP_SHOW,
-                 expected_exceptions = [NeutronForbidden]) \
+                 expected_exceptions = [KeystoneUnauthorized]) \
             .set(SecgroupAddFactory.SECURITY_GROUP_RULE_CREATE,
-                 clients=user1) \
+                 clients=creator) \
             .set(SecgroupAddFactory.SECURITY_GROUP_ADD_TO_SERVER,
-                 expected_exceptions = [NeutronForbidden]) \
+                 expected_exceptions = [KeystoneUnauthorized]) \
             .produce() \
             .run(context=self.context)
 
@@ -639,7 +653,7 @@ class TestSample(BaseTestCase):
             'Default', self.project, 'bu-admin'
         )
         SubnetUpdateFactory(cloud_admin) \
-            .set(SubnetUpdateFactory.SUBNET_UPDATE, clients=bu_admin, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
             .produce() \
             .run(context=self.context)
 
@@ -678,20 +692,10 @@ class TestSample(BaseTestCase):
         )
 
         SampleFactory(cloud_admin) \
-            .set(SampleFactory.NETWORK_CREATE) \
             .set(SampleFactory.NETWORK_SHOW, clients=user1, expected_exceptions=[NeutronNotFound]) \
-            .set(SampleFactory.SUBNET_CREATE) \
             .set(SampleFactory.SUBNET_SHOW, clients=user1) \
-            .set(SampleFactory.SERVER_CREATE) \
-            .set(SampleFactory.SERVER_WAIT,
-                 clients=user1) \
-            .set(SampleFactory.SECURITY_GROUP_CREATE) \
-            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=user1, expected_exceptions=[NeutronNotFound]) \
-            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE) \
-            .set(SampleFactory.SERVER_DELETE) \
-            .set(SampleFactory.ROUTER_CREATE) \
-            .set(SampleFactory.ROUTER_SHOW, clients=user1, expected_exceptions=[NeutronNotFound]) \
-            .set(SampleFactory.ROUTER_ADD_INTERFACE) \
+            .set(SampleFactory.SERVER_WAIT, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=user1) \
             .produce() \
             .run(context=self.context)
 
@@ -845,5 +849,937 @@ class TestSample(BaseTestCase):
             .produce() \
             .run(context=self.context)
 
+#bu-brt
+#todo: retest
+    def test_bu_brt(self):
 
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
 
+        SampleFactory(cloud_admin) \
+            .set(SampleFactory.NETWORK_CREATE) \
+            .set(SampleFactory.NETWORK_SHOW, clients=user1) \
+            .set(SampleFactory.SUBNET_CREATE) \
+            .set(SampleFactory.SUBNET_SHOW, clients=user1) \
+            .set(SampleFactory.SERVER_CREATE) \
+            .set(SampleFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_CREATE) \
+            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE) \
+            .set(SampleFactory.SERVER_DELETE) \
+            .set(SampleFactory.ROUTER_CREATE) \
+            .set(SampleFactory.ROUTER_SHOW, clients=user1) \
+            .set(SampleFactory.ROUTER_ADD_INTERFACE) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_network_create(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+
+        NetworkCreateFactory(user1) \
+            .set(NetworkCreateFactory.NETWORK_CREATE, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_subnet_create(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SubnetCreateFactory(user1) \
+            .set(SubnetCreateFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SubnetCreateFactory.SUBNET_CREATE, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_router_create(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+        RouterCreateFactory(user1) \
+            .set(RouterCreateFactory.ROUTER_CREATE, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_network_delete(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        NetworkDeleteFactory(cloud_admin) \
+            .set(NetworkDeleteFactory.NETWORK_DELETE, clients=user1, expected_exceptions=[NeutronNotFound]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_subnet_delete(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SubnetDeleteFactory(cloud_admin) \
+            .set(SubnetDeleteFactory.SUBNET_DELETE, clients=user1, expected_exceptions=[NeutronNotFound]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_router_delete(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        RouterDeleteFactory(cloud_admin) \
+            .set(RouterDeleteFactory.ROUTER_DELETE, clients=user1, expected_exceptions=[NeutronNotFound]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_subnet_update(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        SubnetUpdateFactory(user1) \
+            .set(SubnetUpdateFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_router_update(self):
+
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        RouterUpdateFactory(user1) \
+            .set(RouterUpdateFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(RouterUpdateFactory.ROUTER_UPDATE, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_get_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-brt'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+
+        FloatingIPFactory(cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1, expected_exceptions=[NeutronForbidden]) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 clients=user1, expected_exceptions=[NeutronForbidden]) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1,
+                 expected_exceptions=[NeutronNotFound]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_brt_get_floatingip_diff_domain(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+
+        user1 = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-brt'
+        )
+
+        FloatingIPFactory(cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 clients=user1, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 clients=user1, expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+#bu-poweruser
+    #todo: test all these
+
+    def test_bu_poweruser_all(self):
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+
+        SampleFactory(bu_admin) \
+            .set(SampleFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.SECURITY_GROUP_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_REMOVE_INTERFACE, clients=cloud_admin) \
+            .set(SampleFactory.ROUTER_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.SUBNET_DELETE, clients=cloud_admin) \
+            .set(SampleFactory.NETWORK_DELETE, clients=cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_floatingip(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_same_domain_different_user(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+
+        SampleFactory(bu_admin) \
+            .set(SampleFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SERVER_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_DELETE, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_DELETE, clients=user1) \
+            .set(SampleFactory.SERVER_DELETE,
+                 clients=user1) \
+            .set(SampleFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.ROUTER_ADD_INTERFACE, clients=user1) \
+            .set(SampleFactory.ROUTER_REMOVE_INTERFACE, clients=user1) \
+            .set(SampleFactory.ROUTER_DELETE, clients=user1) \
+            .set(SampleFactory.SUBNET_DELETE, clients=user1) \
+            .set(SampleFactory.NETWORK_DELETE, clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_same_domain_different_user_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE, clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_different_domain_different_user_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-poweruser', False
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_different_domain_different_user_secgroup_add_to_server(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-poweruser', False
+        )
+
+        SecgroupAddFactory(bu_admin) \
+            .set(SecgroupAddFactory.NETWORK_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.NETWORK_SHOW,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .set(SecgroupAddFactory.SUBNET_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.SUBNET_SHOW,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .set(SecgroupAddFactory.SERVER_CREATE,
+                 clients=user1) \
+            .set(SecgroupAddFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_SHOW,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_RULE_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_ADD_TO_SERVER,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_different_domain_different_user_add_interface_to_server(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-poweruser', False
+        )
+
+        AddInterfaceFactory(bu_admin) \
+            .set(AddInterfaceFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SERVER_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_RULE_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_ADD_TO_SERVER,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_REMOVE_FROM_SERVER,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_RULE_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SERVER_DELETE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.ROUTER_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.ROUTER_ADD_INTERFACE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_different_domain_different_user_subnet_delete(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-poweruser', False
+        )
+
+        SubnetDeleteFactory(user1) \
+            .set(SubnetDeleteFactory.SUBNET_DELETE, clients=bu_admin,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_different_domain_different_user_network_delete(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'bu-poweruser', False
+        )
+
+        NetworkDeleteFactory(user1) \
+            .set(NetworkDeleteFactory.NETWORK_DELETE, clients=bu_admin,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_subnet_update(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+        SubnetUpdateFactory(cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_bu_poweruser_router_update(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'bu-poweruser', False
+        )
+        RouterUpdateFactory(cloud_admin) \
+            .set(RouterUpdateFactory.ROUTER_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+#cirt
+#todo: test all these
+
+    def test_cirt_all(self):
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+
+        SampleFactory(cloud_admin) \
+            .set(SampleFactory.SUBNET_SHOW, clients=bu_admin) \
+            .set(SampleFactory.ROUTER_SHOW, clients=bu_admin) \
+            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=bu_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_floatingip(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.PORT_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_same_domain_different_user(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+
+        SampleFactory(bu_admin) \
+            .set(SampleFactory.NETWORK_CREATE, clients=user1) \
+            .set(SampleFactory.NETWORK_SHOW, clients=user1) \
+            .set(SampleFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SERVER_CREATE, clients=user1) \
+            .set(SampleFactory.SERVER_WAIT, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_CREATE, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_ADD_TO_SERVER, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_REMOVE_FROM_SERVER, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_DELETE, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_DELETE, clients=user1) \
+            .set(SampleFactory.SERVER_DELETE,
+                 clients=user1) \
+            .set(SampleFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.ROUTER_ADD_INTERFACE, clients=user1) \
+            .set(SampleFactory.ROUTER_REMOVE_INTERFACE, clients=user1) \
+            .set(SampleFactory.ROUTER_DELETE, clients=user1) \
+            .set(SampleFactory.SUBNET_DELETE, clients=user1) \
+            .set(SampleFactory.NETWORK_DELETE, clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_same_domain_different_user_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE, clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE, clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE, clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_different_domain_different_user_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cirt'
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_different_domain_different_user_secgroup_add_to_server(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cirt'
+        )
+
+        SecgroupAddFactory(bu_admin) \
+            .set(SecgroupAddFactory.NETWORK_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.NETWORK_SHOW,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .set(SecgroupAddFactory.SUBNET_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.SUBNET_SHOW,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .set(SecgroupAddFactory.SERVER_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_SHOW,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_RULE_CREATE,
+                 clients=creator) \
+            .set(SecgroupAddFactory.SECURITY_GROUP_ADD_TO_SERVER,
+                 expected_exceptions = [KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_different_domain_different_user_add_interface_to_server(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cirt'
+        )
+
+        AddInterfaceFactory(bu_admin) \
+            .set(AddInterfaceFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SERVER_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_RULE_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_ADD_TO_SERVER,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_REMOVE_FROM_SERVER,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_RULE_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SERVER_DELETE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.ROUTER_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.ROUTER_ADD_INTERFACE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_different_domain_different_user_subnet_delete(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cirt'
+        )
+
+        SubnetDeleteFactory(user1) \
+            .set(SubnetDeleteFactory.SUBNET_DELETE, clients=bu_admin,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_different_domain_different_user_network_delete(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cirt'
+        )
+
+        NetworkDeleteFactory(user1) \
+            .set(NetworkDeleteFactory.NETWORK_DELETE, clients=bu_admin,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_subnet_update(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+        SubnetUpdateFactory(cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cirt_router_update(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cirt'
+        )
+        RouterUpdateFactory(cloud_admin) \
+            .set(RouterUpdateFactory.ROUTER_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+#cloud-support
+#todo: test all these
+
+    def test_cloud_support_all(self):
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-support'
+        )
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+
+        SampleFactory(cloud_admin) \
+            .set(SampleFactory.NETWORK_SHOW, clients=bu_admin) \
+            .set(SampleFactory.SUBNET_SHOW, clients=bu_admin) \
+            .set(SampleFactory.ROUTER_SHOW, clients=bu_admin) \
+            .set(SampleFactory.SECURITY_GROUP_SHOW, clients=bu_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_floatingip(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-support'
+        )
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.SUBNET_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_CREATE, clients=cloud_admin) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE, clients=cloud_admin) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=cloud_admin) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_same_domain_different_user(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-support'
+        )
+
+        SampleFactory(bu_admin) \
+            .set(SampleFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SERVER_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_CREATE, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_ADD_TO_SERVER, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_REMOVE_FROM_SERVER, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_RULE_DELETE, clients=user1) \
+            .set(SampleFactory.SECURITY_GROUP_DELETE, clients=user1) \
+            .set(SampleFactory.SERVER_DELETE,
+                 clients=user1) \
+            .set(SampleFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(SampleFactory.ROUTER_ADD_INTERFACE, clients=user1) \
+            .set(SampleFactory.ROUTER_REMOVE_INTERFACE, clients=user1) \
+            .set(SampleFactory.ROUTER_DELETE, clients=user1) \
+            .set(SampleFactory.SUBNET_DELETE, clients=user1) \
+            .set(SampleFactory.NETWORK_DELETE, clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_same_domain_different_user_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-support'
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE, clients=user1) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_different_domain_different_user_floatingip(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cloud-support'
+        )
+
+        FloatingIPFactory(bu_admin) \
+            .set(FloatingIPFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.PORT_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.ROUTER_ADD_INTERFACE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_CREATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_ASSOCIATE,
+                 clients=user1) \
+            .set(FloatingIPFactory.FLOATINGIP_DISASSOCIATE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(FloatingIPFactory.FLOATINGIP_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_different_domain_different_user_add_interface_to_server(self):
+        creator = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cloud-support'
+        )
+
+        AddInterfaceFactory(bu_admin) \
+            .set(AddInterfaceFactory.NETWORK_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SUBNET_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SERVER_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SERVER_WAIT,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_RULE_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_ADD_TO_SERVER,
+                 clients=user1) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_REMOVE_FROM_SERVER,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_RULE_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SECURITY_GROUP_DELETE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.SERVER_DELETE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.ROUTER_CREATE,
+                 clients=user1) \
+            .set(AddInterfaceFactory.ROUTER_SHOW,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .set(AddInterfaceFactory.ROUTER_ADD_INTERFACE,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_different_domain_different_user_subnet_delete(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cloud-support'
+        )
+
+        SubnetDeleteFactory(user1) \
+            .set(SubnetDeleteFactory.SUBNET_DELETE, clients=bu_admin,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_different_domain_different_user_network_delete(self):
+        user1 = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Domain2', self.project, 'cloud-support'
+        )
+
+        NetworkDeleteFactory(user1) \
+            .set(NetworkDeleteFactory.NETWORK_DELETE, clients=bu_admin,
+                 expected_exceptions=[KeystoneUnauthorized]) \
+            .produce() \
+            .run(context=self.context)
+
+#todo: retest
+    def test_cloud_support_subnet_update(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-support'
+        )
+        SubnetUpdateFactory(cloud_admin) \
+            .set(SubnetUpdateFactory.SUBNET_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
+
+    def test_cloud_support_router_update(self):
+        cloud_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-admin'
+        )
+        bu_admin = self.km.find_user_credentials(
+            'Default', self.project, 'cloud-support'
+        )
+        RouterUpdateFactory(cloud_admin) \
+            .set(RouterUpdateFactory.ROUTER_UPDATE, clients=bu_admin, expected_exceptions=[NeutronForbidden]) \
+            .produce() \
+            .run(context=self.context)
