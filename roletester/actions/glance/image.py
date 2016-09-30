@@ -61,6 +61,8 @@ def delete(clients, context, image_key=None):
     :param image_key: key name in context to delete (like server_image_id)
     :type image_id: String
     """
+    logger.debug("Taking action image_delete")
+
     def delete_image(id):
         """*Actually* deletes an image from Glance.
 
