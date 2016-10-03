@@ -5,7 +5,7 @@ import copy
 
 logger = logging.getLogger('roletester.actions.swift.swift_container')
 
-
+@swift_error
 def create(clients, context,
            name="test_container"):
     """Create a container

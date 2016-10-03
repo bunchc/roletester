@@ -5,7 +5,7 @@ import copy
 
 logger = logging.getLogger('roletester.actions.swift.swift_object')
 
-
+@swift_error
 def put(clients, context, obj_name="test_object", obj_contents=""):
     """Create an object in a container
 
@@ -77,7 +77,7 @@ def get(clients, context):
     swift.head_object(container, obj_name)
     swift.get_object(container, obj_name)
 
-
+@swift_error
 def replace_metadata(clients, context,
                      metadata={"X-Object-Meta-Author": "JohnDoe"}):
     """Adds and deletes a metadata key/value pair on a container
@@ -99,7 +99,7 @@ def replace_metadata(clients, context,
     add_metadata(clients, context, metadata)
     delete_metadata(clients, context)
 
-
+@swift_error
 def add_metadata(clients, context,
                  metadata={"X-Object-Meta-Author": "JohnDoe"}):
     """Sets metadata on an an object in a container.

@@ -9,3 +9,8 @@ class SwiftNotFoundException(SwiftClientException):
 class SwiftNotAuthorized(SwiftClientException):
     """Not authorised, 401"""
     pass
+
+
+class SwiftForbidden(SwiftClientException):
+    """Forbidden, 403"""
+    pass

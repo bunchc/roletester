@@ -1,6 +1,7 @@
 from swiftclient.client import ClientException as SwiftClientException
 from swift_exceptions import SwiftNotAuthorized
 from swift_exceptions import SwiftNotFoundException
+from swift_exceptions import SwiftForbidden
 
 
 def swift_error(swift_function):
@@ -11,9 +12,11 @@ def swift_error(swift_function):
             return result
         except SwiftClientException as exception:
             if exception.http_status == 404:
-                raise SwiftNotFoundException()
+                raise SwiftNotFoundException(exception)
             if exception.http_status == 401:
-                raise SwiftNotAuthorized()
+                raise SwiftNotAuthorized(exception)
+            if exception.http_status == 403:
+                raise SwiftForbidden(exception)
             else:
                 raise
 

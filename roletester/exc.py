@@ -13,6 +13,7 @@ from swiftclient.client import ClientException as SwiftClientException
 from neutronclient.common.exceptions import Forbidden as NeutronForbidden
 from swift_exceptions import SwiftNotAuthorized as SwiftNotAuthorized
 from swift_exceptions import SwiftNotFoundException as SwiftNotFoundException
+from swift_exceptions import SwiftForbidden as SwiftForbidden
 
 __all__ = [
     'CinderNotFound',
@@ -28,5 +29,6 @@ __all__ = [
     'NovaNotFound',
     'SwiftClientException',
     'SwiftNotAuthorized',
-    'SwiftNotFoundException'
+    'SwiftNotFoundException',
+    'SwiftForbidden'
 ]
