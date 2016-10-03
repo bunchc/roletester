@@ -1,5 +1,6 @@
 """Module containing actions to manage swift containers."""
 from roletester.log import logging
+from roletester.swift_error_decorator import swift_error
 import copy
 
 logger = logging.getLogger('roletester.actions.swift.swift_container')
@@ -25,6 +26,7 @@ def create(clients, context,
     context.setdefault('stack', []).append({'container_name': name})
 
 
+@swift_error
 def delete(clients, context):
     """Deletes a container.
 
@@ -41,6 +43,7 @@ def delete(clients, context):
     swift.delete_container(name)
 
 
+@swift_error
 def get(clients, context):
     """Retrieves stats and lists objects in a container.
 
@@ -79,6 +82,7 @@ def add_metadata(clients, context,
     swift.post_container(name, metadata)
 
 
+@swift_error
 def delete_metadata(clients, context):
     """Sets metadata on a container.
 

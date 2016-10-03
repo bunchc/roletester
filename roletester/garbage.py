@@ -5,6 +5,7 @@ from exc import GlanceNotFound
 from exc import KeystoneNotFound
 from exc import NeutronNotFound
 from exc import NovaNotFound
+from exc import SwiftNotFoundException
 
 from roletester.actions.cinder import volume_delete
 from roletester.actions.cinder import volume_detach
@@ -103,7 +104,8 @@ class Collector(object):
                     GlanceNotFound,
                     KeystoneNotFound,
                     NeutronNotFound,
-                    NovaNotFound):
+                    NovaNotFound,
+                    SwiftNotFoundException):
                 logger.debug("{}:{} Was not found.".format(key, resource_id))
                 pass
             except Exception:

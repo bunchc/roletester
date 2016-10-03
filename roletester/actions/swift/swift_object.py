@@ -1,5 +1,6 @@
 """Module containing actions to manage swift objects."""
 from roletester.log import logging
+from roletester.swift_error_decorator import swift_error
 import copy
 
 logger = logging.getLogger('roletester.actions.swift.swift_object')
@@ -34,6 +35,7 @@ def put(clients, context, obj_name="test_object", obj_contents=""):
     })
 
 
+@swift_error
 def delete(clients, context):
     """Deletes an object from a container
 
@@ -54,6 +56,7 @@ def delete(clients, context):
     swift.delete_object(container, obj_name)
 
 
+@swift_error
 def get(clients, context):
     """Retrieves stats and lists objects in a container.
 
@@ -122,6 +125,7 @@ def add_metadata(clients, context,
     swift.post_object(container, obj_name, metadata)
 
 
+@swift_error
 def delete_metadata(clients, context):
     """Deletes metadata on an object in a container.
 

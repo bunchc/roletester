@@ -11,6 +11,8 @@ from novaclient.exceptions import NotFound as NovaNotFound
 from novaclient.exceptions import Forbidden as NovaForbidden
 from swiftclient.client import ClientException as SwiftClientException
 from neutronclient.common.exceptions import Forbidden as NeutronForbidden
+from swift_exceptions import SwiftNotAuthorized as SwiftNotAuthorized
+from swift_exceptions import SwiftNotFoundException as SwiftNotFoundException
 
 __all__ = [
     'CinderNotFound',
@@ -24,5 +26,7 @@ __all__ = [
     'KeystoneUnauthorized',
     'KeystoneForbidden'
     'NovaNotFound',
-    'SwiftClientException'
+    'SwiftClientException',
+    'SwiftNotAuthorized',
+    'SwiftNotFoundException'
 ]
