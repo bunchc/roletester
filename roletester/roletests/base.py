@@ -24,7 +24,7 @@ class Base(unittest.TestCase):
         # Set up the garbage collector
         # admin = self.km.find_user_credentials('Default', 'admin', 'admin')
         print "Garbage user:"
-        admin = self.km.find_user_credentials('Default', 'Default', 'cloud-admin')
+        admin = self.km.find_user_credentials('Default', 'Default', 'cloud-admin', False)
         self.gc = GC(admin)
 
     def tearDown(self):
