@@ -73,7 +73,8 @@ class ClientManager(object):
         """
         if self.neutron is None:
             sess = self.get_session(scope=scope)
-            self.neutron = neutronclient.Client(session=sess)
+	    iface = os.getenv('OS_ENDPOINT_TYPE', "internalURL")
+            self.neutron = neutronclient.Client(session=sess, interface=iface)
         return self.neutron
 
     def get_glance(self, version='2', scope='project'):
@@ -116,7 +117,7 @@ class ClientManager(object):
             )
         return self.swift
 
-    def get_keystone(self, version='3', scope='domain'):
+    def get_keystone(self, version='3', scope='project'):
         """Get a keystone client instance.
 
         :param scope: You *probably* want a domain scope, but can override.
@@ -124,7 +125,7 @@ class ClientManager(object):
         :return: keystoneClient.Client
         """
         if self.keystone is None:
-            iface = os.getenv('OS_ENDPOINT_TYPE', "public")
+            iface = os.getenv('OS_ENDPOINT_TYPE', "internalURL")
             self.keystone = keystoneclient.Client(
                 version=version,
                 session=self.get_session(scope=scope),
